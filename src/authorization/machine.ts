@@ -8,7 +8,7 @@ export type AuthorizationEvent =
     | Event<'DENY'>
     | Event<'GRANT'>
     | Event<'PROVISION'>
-    | Event<'SKIP'>;
+    | Event<'DEAUTHENTICATE'>;
 export type AuthorizationStates =
     | 'authorizing'
     | 'denied'
@@ -37,8 +37,8 @@ export type State = BaseState<AuthorizationContext, AuthorizationEvent>;
 export function createMachine(proxy: Proxy, resolveChallenge: () => Challenge) {
     return Machine<AuthorizationContext, AuthorizationStateSchema, AuthorizationEvent>(
         {
-            id: 'auth',
-            initial: 'provisioning',
+            id: 'authorization',
+            initial: 'idle',
             states: {
                 authorizing: {
                     entry: ['beginAuthorizing'],
@@ -62,8 +62,8 @@ export function createMachine(proxy: Proxy, resolveChallenge: () => Challenge) {
                 },
                 idle: {
                     on: {
+                        DEAUTHENTICATE: 'unauthenticated',
                         PROVISION: 'provisioning',
-                        SKIP: 'unauthenticated',
                     },
                 },
                 provisioning: {

@@ -25,7 +25,7 @@ export type State = BaseState<AuthenticationContext, AuthenticationEvent>;
 export function createMachine(proxy: Proxy) {
     return Machine<AuthenticationContext, AuthenticationStateSchema, AuthenticationEvent>(
         {
-            id: 'auth',
+            id: 'authentication',
             initial: 'idle',
             states: {
                 authenticated: {
@@ -63,5 +63,6 @@ export function createMachine(proxy: Proxy) {
                 },
             },
         },
+        { challenge: null },
     );
 }

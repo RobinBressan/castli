@@ -1,25 +1,25 @@
-import { Observable, Subscriber, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 
-import {
-    AuthenticationContext,
-    AuthenticationStates,
-    State as AuthenticationState,
-} from './authentication/machine';
+import { filter } from 'rxjs/operators';
+import { AuthenticationContext, AuthenticationStates } from './authentication/machine';
 import { AuthenticationService } from './authentication/service';
 import {
     AuthorizationContext,
     AuthorizationStates,
-    State as AuthorizationState,
+    AuthorizationStateSchema,
 } from './authorization/machine';
 import { AuthorizationService } from './authorization/service';
 import { Proxy } from './types';
 
-interface PublicState extends AuthorizationContext {
+interface FirewallState extends AuthorizationContext {
     stateValue: AuthorizationStates;
 }
 
-export class Firewall extends Observable<PublicState> {
+export class Firewall {
     public readonly query: Record<string, any>;
+
+    public readonly subscribe: Observable<FirewallState>['subscribe'];
+    public readonly pipe: Observable<FirewallState>['pipe'];
 
     private authenticationService: AuthenticationService;
     private authorizationService: AuthorizationService;
@@ -27,17 +27,16 @@ export class Firewall extends Observable<PublicState> {
     private authorizationSubscription: Subscription;
     private authenticationSubscription: Subscription;
     private challenge: AuthenticationContext['challenge'];
-    private observer: Subscriber<PublicState>;
+    private in$ = new BehaviorSubject<FirewallState>(null);
     private proxy: Proxy;
+
+    private out$ = this.in$.pipe(filter(v => v !== null));
 
     constructor(
         proxy: Proxy,
         authenticationService: AuthenticationService,
         query?: Record<string, any>,
     ) {
-        super(o => {
-            this.observer = o;
-        });
         this.authenticationService = authenticationService;
         this.proxy = proxy;
         this.query = query;
@@ -48,15 +47,28 @@ export class Firewall extends Observable<PublicState> {
         this.authorizationSubscription = this.authorizationService.subscribe(
             this.onAuthorizationStateChange,
         );
+
+        this.pipe = this.out$.pipe.bind(this.out$);
+        this.subscribe = this.out$.subscribe.bind(this.out$);
+    }
+
+    get service() {
+        return this.authorizationService;
     }
 
     public complete() {
         this.authenticationSubscription.unsubscribe();
         this.authorizationSubscription.unsubscribe();
-        this.observer.complete();
+        this.in$.complete();
     }
 
-    private onAuthenticationStateChange = (state: AuthenticationState) => {
+    public waitFor(state: keyof AuthorizationStateSchema['states']) {
+        return this.authorizationService.waitFor(state);
+    }
+
+    private onAuthenticationStateChange = value => {
+        const [state] = value;
+
         this.challenge = state.context.challenge;
 
         switch (state.value as AuthenticationStates) {
@@ -64,15 +76,19 @@ export class Firewall extends Observable<PublicState> {
                 this.authorizationService.send({ type: 'PROVISION', query: this.query });
                 break;
             case 'unauthenticated':
-                this.authorizationService.send({ type: 'SKIP' });
+                this.authorizationService.send('DEAUTHENTICATE');
+                break;
+            case 'idle':
                 break;
             default:
-                this.authorizationService.send({ type: 'RESET' });
+                this.authorizationService.send('RESET');
         }
     };
 
-    private onAuthorizationStateChange = (state: AuthorizationState) => {
-        this.observer.next({
+    private onAuthorizationStateChange = value => {
+        const [state] = value;
+
+        this.in$.next({
             ...state.context,
             stateValue: state.value as any,
         });
