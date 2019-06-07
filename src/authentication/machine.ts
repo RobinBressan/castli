@@ -48,7 +48,7 @@ export function createMachine(proxy: Proxy) {
                 },
                 unauthenticated: {
                     on: {
-                        AUTHENTICATE: 'challenging',
+                        CHALLENGE: 'challenging',
                     },
                 },
             },

@@ -22,7 +22,7 @@ describe('Firewall', () => {
         expect(authenticationService.state.value).toBe('idle');
         expect(firewall.service.state.value).toBe('idle');
 
-        authenticationService.send('DEAUTHENTICATE');
+        authenticationService.deauthenticate();
 
         const subscriber = jest.fn();
         firewall.subscribe(subscriber);

@@ -73,15 +73,15 @@ export class Firewall {
 
         switch (state.value as AuthenticationStates) {
             case 'authenticated':
-                this.authorizationService.send({ type: 'PROVISION', query: this.query });
+                this.authorizationService.provision(this.query);
                 break;
             case 'unauthenticated':
-                this.authorizationService.send('DEAUTHENTICATE');
+                this.authorizationService.deauthenticate();
                 break;
             case 'idle':
                 break;
             default:
-                this.authorizationService.send('RESET');
+                this.authorizationService.reset();
         }
     };
 

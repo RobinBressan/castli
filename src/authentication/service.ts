@@ -15,4 +15,12 @@ export class AuthenticationService extends ObservableService<
     constructor(proxy: Proxy) {
         super(createMachine(proxy));
     }
+
+    public challenge(query?: Record<string, any>) {
+        this.send({ type: 'AUTHENTICATE', query });
+    }
+
+    public deauthenticate() {
+        this.send('DEAUTHENTICATE');
+    }
 }
