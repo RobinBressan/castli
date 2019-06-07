@@ -1,6 +1,7 @@
-import { Machine, send, State as BaseState } from 'xstate';
+import { Machine, State as BaseState } from 'xstate';
 
-import { Challenge, Event, Permission, Proxy, User } from '../types';
+import { Event, Permission, User } from '../types';
+import { AuthorizationGateway } from './gateway';
 
 export type AuthorizationEvent =
     | Event<'RESET'>
@@ -34,7 +35,7 @@ export interface AuthorizationContext {
 
 export type State = BaseState<AuthorizationContext, AuthorizationEvent>;
 
-export function createMachine(proxy: Proxy, resolveChallenge: () => Challenge) {
+export function createMachine(gateway: AuthorizationGateway) {
     return Machine<AuthorizationContext, AuthorizationStateSchema, AuthorizationEvent>(
         {
             id: 'authorization',
@@ -83,23 +84,10 @@ export function createMachine(proxy: Proxy, resolveChallenge: () => Challenge) {
         {
             actions: {
                 async beginProvisioning(context, event) {
-                    const { permissions, user } = await proxy.provision(
-                        event.query,
-                        resolveChallenge(),
-                    );
-
-                    context.permissions = permissions;
-                    context.user = user;
-
-                    send('AUTHORIZE');
+                    gateway.provision(context, event);
                 },
                 async beginAuthorizing(context, event) {
-                    try {
-                        await proxy.authorize(event.query, context.permissions, resolveChallenge());
-                        send('GRANT');
-                    } catch (error) {
-                        send({ type: 'DENY', query: { error } });
-                    }
+                    gateway.authorize(context, event);
                 },
             },
         },

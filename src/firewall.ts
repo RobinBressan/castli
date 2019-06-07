@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 
 import { filter } from 'rxjs/operators';
-import { AuthenticationContext, AuthenticationStates } from './authentication/machine';
+import { AuthenticationStates } from './authentication/machine';
 import { AuthenticationService } from './authentication/service';
 import {
     AuthorizationContext,
@@ -23,10 +23,9 @@ export class Firewall {
 
     private authenticationService: AuthenticationService;
     private authorizationService: AuthorizationService;
-
     private authorizationSubscription: Subscription;
     private authenticationSubscription: Subscription;
-    private challenge: AuthenticationContext['challenge'];
+
     private in$ = new BehaviorSubject<FirewallState>(null);
     private proxy: Proxy;
 
@@ -40,7 +39,10 @@ export class Firewall {
         this.authenticationService = authenticationService;
         this.proxy = proxy;
         this.query = query;
-        this.authorizationService = new AuthorizationService(this.proxy, () => this.challenge);
+        this.authorizationService = new AuthorizationService(
+            this.proxy,
+            this.authenticationService,
+        );
         this.authenticationSubscription = this.authenticationService.subscribe(
             this.onAuthenticationStateChange,
         );
@@ -56,7 +58,7 @@ export class Firewall {
         return this.authorizationService;
     }
 
-    public complete() {
+    public dispose() {
         this.authenticationSubscription.unsubscribe();
         this.authorizationSubscription.unsubscribe();
         this.in$.complete();
@@ -68,8 +70,6 @@ export class Firewall {
 
     private onAuthenticationStateChange = value => {
         const [state] = value;
-
-        this.challenge = state.context.challenge;
 
         switch (state.value as AuthenticationStates) {
             case 'authenticated':

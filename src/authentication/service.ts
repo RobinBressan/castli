@@ -1,5 +1,6 @@
 import { ObservableService } from '../observable-service';
 import { Proxy } from '../types';
+import { AuthenticationGateway } from './gateway';
 import {
     AuthenticationContext,
     AuthenticationEvent,
@@ -13,14 +14,18 @@ export class AuthenticationService extends ObservableService<
     AuthenticationEvent
 > {
     constructor(proxy: Proxy) {
-        super(createMachine(proxy));
+        super(createMachine(new AuthenticationGateway(proxy, () => this)));
+    }
+
+    public authenticate() {
+        this.send('AUTHENTICATE');
     }
 
     public challenge(query?: Record<string, any>) {
-        this.send({ type: 'AUTHENTICATE', query });
+        this.send({ type: 'CHALLENGE', query });
     }
 
-    public deauthenticate() {
-        this.send('DEAUTHENTICATE');
+    public deauthenticate(query?: Record<string, any>) {
+        this.send({ type: 'DEAUTHENTICATE', query });
     }
 }

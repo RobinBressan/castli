@@ -1,6 +1,7 @@
-import { Machine, send, State as BaseState } from 'xstate';
+import { Machine, State as BaseState } from 'xstate';
 
-import { Event, Proxy } from '../types';
+import { Event } from '../types';
+import { AuthenticationGateway } from './gateway';
 
 export type AuthenticationEvent =
     | Event<'AUTHENTICATE'>
@@ -22,7 +23,7 @@ export interface AuthenticationContext {
 
 export type State = BaseState<AuthenticationContext, AuthenticationEvent>;
 
-export function createMachine(proxy: Proxy) {
+export function createMachine(gateway: AuthenticationGateway) {
     return Machine<AuthenticationContext, AuthenticationStateSchema, AuthenticationEvent>(
         {
             id: 'authentication',
@@ -56,10 +57,7 @@ export function createMachine(proxy: Proxy) {
         {
             actions: {
                 async beginChallenge(context, event) {
-                    const response = await proxy.challenge(event.query);
-                    context.challenge = response;
-
-                    send('AUTHENTICATE');
+                    gateway.challenge(context, event);
                 },
             },
         },
