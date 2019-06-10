@@ -7,19 +7,21 @@ export interface Event<T extends string> {
     type: T;
 }
 
+type OptionalPromise<T> = T | Promise<T>;
+
 export interface Proxy {
     challenge(
         query: Record<string, any>,
         previousChallenges: Challenge[],
         rechallenge: () => void,
-    ): Promise<Challenge>;
+    ): OptionalPromise<Challenge>;
     provision(
         query: Record<string, any>,
         challenges: Challenge[],
-    ): Promise<{ permissions: Permission[]; user: User }>;
+    ): OptionalPromise<{ permissions: Permission[]; user: User }>;
     authorize(
         query: Record<string, any>,
         permission: Permission[],
         challenges: Challenge[],
-    ): Promise<void>;
+    ): OptionalPromise<void>;
 }
