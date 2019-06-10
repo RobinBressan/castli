@@ -93,17 +93,23 @@ describe('Firewall', () => {
         expect(proxy.authorize).toHaveBeenCalledWith(
             { role: 'ADMIN' },
             [{ role: 'resource.write' }],
-            {
-                token: 'abc123',
-            },
+            [
+                {
+                    token: 'abc123',
+                },
+            ],
         );
         expect(proxy.challenge).toHaveBeenCalledTimes(1);
-        expect(proxy.challenge).toHaveBeenCalledWith({
-            email: 'bob@localhost',
-            password: 'password',
-        });
+        expect(proxy.challenge).toHaveBeenCalledWith(
+            {
+                email: 'bob@localhost',
+                password: 'password',
+            },
+            [],
+            expect.any(Function),
+        );
         expect(proxy.provision).toHaveBeenCalledTimes(1);
-        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, { token: 'abc123' });
+        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [{ token: 'abc123' }]);
 
         firewall.dispose();
     });
@@ -160,17 +166,23 @@ describe('Firewall', () => {
         expect(proxy.authorize).toHaveBeenCalledWith(
             { role: 'ADMIN' },
             [{ role: 'resource.write' }],
-            {
-                token: 'abc123',
-            },
+            [
+                {
+                    token: 'abc123',
+                },
+            ],
         );
         expect(proxy.challenge).toHaveBeenCalledTimes(1);
-        expect(proxy.challenge).toHaveBeenCalledWith({
-            email: 'bob@localhost',
-            password: 'password',
-        });
+        expect(proxy.challenge).toHaveBeenCalledWith(
+            {
+                email: 'bob@localhost',
+                password: 'password',
+            },
+            [],
+            expect.any(Function),
+        );
         expect(proxy.provision).toHaveBeenCalledTimes(1);
-        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, { token: 'abc123' });
+        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [{ token: 'abc123' }]);
 
         firewall.dispose();
     });

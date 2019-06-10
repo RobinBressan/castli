@@ -8,14 +8,18 @@ export interface Event<T extends string> {
 }
 
 export interface Proxy {
-    challenge(query: Record<string, any>): Promise<Challenge>;
+    challenge(
+        query: Record<string, any>,
+        previousChallenges: Challenge[],
+        rechallenge: () => void,
+    ): Promise<Challenge>;
     provision(
         query: Record<string, any>,
-        challenge: Challenge,
+        challenges: Challenge[],
     ): Promise<{ permissions: Permission[]; user: User }>;
     authorize(
         query: Record<string, any>,
         permission: Permission[],
-        challenge: Challenge,
+        challenges: Challenge[],
     ): Promise<void>;
 }

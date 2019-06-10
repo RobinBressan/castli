@@ -18,14 +18,7 @@ export type AuthorizationStates =
     | 'provisioning'
     | 'unauthenticated';
 export interface AuthorizationStateSchema {
-    states: {
-        authorizing: {};
-        denied: {};
-        granted: {};
-        idle: {};
-        provisioning: {};
-        unauthenticated: {};
-    };
+    states: Record<AuthorizationStates, {}>;
 }
 
 export interface AuthorizationContext {

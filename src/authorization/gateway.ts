@@ -3,6 +3,7 @@ import { AuthorizationService } from './service';
 import { AuthenticationService } from '../authentication/service';
 import { Gateway } from '../gateway';
 import { Proxy } from '../types';
+import { AuthorizationContext, AuthorizationEvent } from './machine';
 
 export class AuthorizationGateway extends Gateway<AuthorizationService> {
     private authenticationService: AuthenticationService;
@@ -17,13 +18,13 @@ export class AuthorizationGateway extends Gateway<AuthorizationService> {
         this.authenticationService = authenticationService;
     }
 
-    private get challenge() {
-        return this.authenticationService.state.context.challenge;
+    private get challenges() {
+        return this.authenticationService.state.context.challenges;
     }
 
-    public async provision(context, event) {
+    public async provision(context: AuthorizationContext, event: AuthorizationEvent) {
         try {
-            const { permissions, user } = await this.proxy.provision(event.query, this.challenge);
+            const { permissions, user } = await this.proxy.provision(event.query, this.challenges);
 
             context.permissions = permissions;
             context.user = user;
@@ -34,9 +35,9 @@ export class AuthorizationGateway extends Gateway<AuthorizationService> {
         }
     }
 
-    public async authorize(context, event) {
+    public async authorize(context: AuthorizationContext, event: AuthorizationEvent) {
         try {
-            await this.proxy.authorize(event.query, context.permissions, this.challenge);
+            await this.proxy.authorize(event.query, context.permissions, this.challenges);
             this.service.grant();
         } catch (error) {
             this.service.deny({ error });

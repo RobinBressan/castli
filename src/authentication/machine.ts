@@ -9,16 +9,11 @@ export type AuthenticationEvent =
     | Event<'DEAUTHENTICATE'>;
 export type AuthenticationStates = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
 export interface AuthenticationStateSchema {
-    states: {
-        idle: {};
-        unauthenticated: {};
-        challenging: {};
-        authenticated: {};
-    };
+    states: Record<AuthenticationStates, {}>;
 }
 
 export interface AuthenticationContext {
-    challenge: Record<string, any>;
+    challenges: Array<Record<string, any>>;
 }
 
 export type State = BaseState<AuthenticationContext, AuthenticationEvent>;
@@ -38,6 +33,7 @@ export function createMachine(gateway: AuthenticationGateway) {
                     entry: ['beginChallenge'],
                     on: {
                         AUTHENTICATE: 'authenticated',
+                        CHALLENGE: 'challenging',
                         DEAUTHENTICATE: 'unauthenticated',
                     },
                 },
@@ -61,6 +57,6 @@ export function createMachine(gateway: AuthenticationGateway) {
                 },
             },
         },
-        { challenge: null },
+        { challenges: [] },
     );
 }

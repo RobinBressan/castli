@@ -1,13 +1,23 @@
+import { cloneDeep } from 'lodash';
+
+import { AuthenticationContext, AuthenticationEvent } from './machine';
 import { AuthenticationService } from './service';
 
 import { Gateway } from '../gateway';
 
 export class AuthenticationGateway extends Gateway<AuthenticationService> {
-    public async challenge(context, event) {
+    public async challenge(context: AuthenticationContext, event: AuthenticationEvent) {
+        let nextEvent: AuthenticationEvent['type'] = 'AUTHENTICATE';
+        const rechallenge = () => (nextEvent = 'CHALLENGE');
+
         try {
-            const response = await this.proxy.challenge(event.query);
-            context.challenge = response;
-            this.service.send('AUTHENTICATE');
+            const response = await this.proxy.challenge(
+                event.query,
+                cloneDeep(context.challenges),
+                rechallenge,
+            );
+            context.challenges.push(response);
+            this.service.send(nextEvent);
         } catch (error) {
             this.service.deauthenticate({ error });
         }
