@@ -1,5 +1,5 @@
 import { AuthenticationService } from '../authentication/service';
-import { ObservableService } from '../observable-service';
+import { ObservableService } from '../core/observable-service';
 import { Proxy } from '../types';
 import { AuthorizationGateway } from './gateway';
 import {
@@ -19,26 +19,26 @@ export class AuthorizationService extends ObservableService<
     }
 
     public authorize(query?: Record<string, any>) {
-        this.send({ type: 'AUTHORIZE', query });
+        this.sendEvent({ type: 'AUTHORIZE', query });
     }
 
     public deny(query?: Record<string, any>) {
-        this.send({ type: 'DENY', query });
+        this.sendEvent({ type: 'DENY', query });
     }
 
     public deauthenticate(query?: Record<string, any>) {
-        this.send({ type: 'DEAUTHENTICATE', query });
+        this.sendEvent({ type: 'DEAUTHENTICATE', query });
     }
 
     public grant() {
-        this.send('GRANT');
+        this.sendEvent('GRANT');
     }
 
     public provision(query?: Record<string, any>) {
-        this.send({ type: 'PROVISION', query });
+        this.sendEvent({ type: 'PROVISION', query });
     }
 
     public reset() {
-        this.send('RESET');
+        this.sendEvent('RESET');
     }
 }

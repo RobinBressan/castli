@@ -54,8 +54,8 @@ export class Firewall {
         this.subscribe = this.out$.subscribe.bind(this.out$);
     }
 
-    get service() {
-        return this.authorizationService;
+    get state() {
+        return this.authorizationService.state;
     }
 
     public dispose() {

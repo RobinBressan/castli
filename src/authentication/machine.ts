@@ -6,7 +6,8 @@ import { AuthenticationGateway } from './gateway';
 export type AuthenticationEvent =
     | Event<'AUTHENTICATE'>
     | Event<'CHALLENGE'>
-    | Event<'DEAUTHENTICATE'>;
+    | Event<'DEAUTHENTICATE'>
+    | Event<'RECHALLENGE'>;
 export type AuthenticationStates = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
 export interface AuthenticationStateSchema {
     states: Record<AuthenticationStates, {}>;
@@ -33,8 +34,8 @@ export function createMachine(gateway: AuthenticationGateway) {
                     entry: ['beginChallenge'],
                     on: {
                         AUTHENTICATE: 'authenticated',
-                        CHALLENGE: 'challenging',
                         DEAUTHENTICATE: 'unauthenticated',
+                        RECHALLENGE: 'idle',
                     },
                 },
                 idle: {

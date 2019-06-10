@@ -1,4 +1,4 @@
-import { ObservableService } from '../observable-service';
+import { ObservableService } from '../core/observable-service';
 import { Proxy } from '../types';
 import { AuthenticationGateway } from './gateway';
 import {
@@ -18,14 +18,14 @@ export class AuthenticationService extends ObservableService<
     }
 
     public authenticate() {
-        this.send('AUTHENTICATE');
+        this.sendEvent('AUTHENTICATE');
     }
 
     public challenge(query?: Record<string, any>) {
-        this.send({ type: 'CHALLENGE', query });
+        this.sendEvent({ type: 'CHALLENGE', query });
     }
 
     public deauthenticate(query?: Record<string, any>) {
-        this.send({ type: 'DEAUTHENTICATE', query });
+        this.sendEvent({ type: 'DEAUTHENTICATE', query });
     }
 }

@@ -1,7 +1,7 @@
 import { AuthorizationService } from './service';
 
 import { AuthenticationService } from '../authentication/service';
-import { Gateway } from '../gateway';
+import { Gateway } from '../core/gateway';
 import { Proxy } from '../types';
 import { AuthorizationContext, AuthorizationEvent } from './machine';
 
