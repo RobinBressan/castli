@@ -1,0 +1,37 @@
+{
+    "name": "castli-core",
+    "version": "1.0.0",
+    "main": "index.js",
+    "author": "RobinBressan",
+    "license": "MIT",
+    "scripts": {
+        "test": "yarn jest"
+    },
+    "dependencies": {
+        "lodash": "4.17.11",
+        "react": "16.8.6",
+        "rxjs": "6.5.2",
+        "xstate": "4.6.0"
+    },
+    "jest": {
+        "globals": {
+            "ts-jest": {
+                "diagnostics": {
+                    "ignoreCodes": [
+                        151001
+                    ]
+                }
+            }
+        },
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js"
+        ],
+        "transform": {
+            "\\.(ts|tsx)$": "ts-jest"
+        },
+        "testEnvironment": "node",
+        "testRegex": "/__tests__/.*\\.spec\\.(ts|tsx|js)$"
+    }
+}

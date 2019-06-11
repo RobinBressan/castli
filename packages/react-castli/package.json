@@ -1,0 +1,15 @@
+{
+    "name": "react-castli",
+    "version": "1.0.0",
+    "description": "React connector for castli",
+    "author": "RobinBressan",
+    "main": "index.js",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/react": "16.8.19",
+        "react": "16.8.6"
+    },
+    "dependencies": {
+        "castli-core": "^1.0.0"
+    }
+}
