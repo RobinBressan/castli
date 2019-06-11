@@ -7,7 +7,14 @@ export interface Event<T extends string> {
     type: T;
 }
 
-type OptionalPromise<T> = T | Promise<T>;
+export type OptionalPromise<T> = T | Promise<T>;
+
+export type Guard = (
+    query: Record<string, any>,
+    user: User,
+    permissions: Permission[],
+    challenges: Challenge[],
+) => OptionalPromise<boolean>;
 
 export interface Proxy {
     challenge(
@@ -19,9 +26,4 @@ export interface Proxy {
         query: Record<string, any>,
         challenges: Challenge[],
     ): OptionalPromise<{ permissions: Permission[]; user: User }>;
-    authorize(
-        query: Record<string, any>,
-        permission: Permission[],
-        challenges: Challenge[],
-    ): OptionalPromise<void>;
 }

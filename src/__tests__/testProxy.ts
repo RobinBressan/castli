@@ -15,10 +15,9 @@ function compile(response?: Response) {
 }
 
 export function createTestProxy(
-    responses: Partial<Record<'authorize' | 'challenge' | 'provision', Response>>,
+    responses: Partial<Record<'challenge' | 'provision', Response>>,
 ): Proxy {
     return {
-        authorize: jest.fn().mockImplementation(() => compile(responses.authorize)),
         challenge: jest.fn().mockImplementation(() => compile(responses.challenge)),
         provision: jest.fn().mockImplementation(() => compile(responses.provision)),
     };

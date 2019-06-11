@@ -2,6 +2,23 @@ import { Fortress } from '../fortress';
 import { createTestProxy } from './testProxy';
 
 describe('Fortress', () => {
+    it('idle => unauthenticated', async () => {
+        expect.assertions(2);
+
+        const proxy = createTestProxy({
+            challenge: {
+                token: 'abc123',
+            },
+        });
+
+        const fortress = new Fortress(proxy, () => true);
+
+        expect(fortress.state.value).toBe('idle');
+        fortress.deauthenticate();
+        await fortress.waitFor('unauthenticated');
+        expect(fortress.state.value).toBe('unauthenticated');
+    });
+
     describe('createFirewall()', () => {
         it('idle => unauthenticated', async () => {
             expect.assertions(8);
@@ -16,7 +33,8 @@ describe('Fortress', () => {
                 },
             });
 
-            const fortress = new Fortress(proxy);
+            const guard = jest.fn().mockReturnValue(true);
+            const fortress = new Fortress(proxy, guard);
             const firewall = fortress.createFirewall({ role: 'ADMIN' });
 
             expect(fortress.state.value).toBe('idle');
@@ -29,13 +47,34 @@ describe('Fortress', () => {
 
             await firewall.waitFor('unauthenticated');
 
-            expect(subscriber).toHaveBeenCalledTimes(1);
-            expect(subscriber.mock.calls).toEqual([
-                [{ permissions: null, stateValue: 'unauthenticated', user: null }],
+            expect(subscriber).toHaveBeenCalledTimes(2);
+            expect(subscriber.mock.calls).toMatchObject([
+                [
+                    [
+                        {
+                            context: { permissions: null, user: null },
+                            value: 'idle',
+                        },
+                        {
+                            type: 'xstate.init',
+                        },
+                    ],
+                ],
+                [
+                    [
+                        {
+                            context: { permissions: null, user: null },
+                            value: 'unauthenticated',
+                        },
+                        {
+                            type: 'DEAUTHENTICATE',
+                        },
+                    ],
+                ],
             ]);
             expect(firewall.state.value).toBe('unauthenticated');
 
-            expect(proxy.authorize).not.toHaveBeenCalled();
+            expect(guard).not.toHaveBeenCalled();
             expect(proxy.challenge).not.toHaveBeenCalled();
             expect(proxy.provision).not.toHaveBeenCalled();
 
@@ -55,7 +94,8 @@ describe('Fortress', () => {
                 },
             });
 
-            const fortress = new Fortress(proxy);
+            const guard = jest.fn().mockReturnValue(true);
+            const fortress = new Fortress(proxy, guard);
             const firewall = fortress.createFirewall({ role: 'ADMIN' });
 
             expect(fortress.state.value).toBe('idle');
@@ -68,30 +108,70 @@ describe('Fortress', () => {
 
             await firewall.waitFor('granted');
 
-            expect(subscriber).toHaveBeenCalledTimes(4);
-            expect(subscriber.mock.calls).toEqual([
-                [{ permissions: null, stateValue: 'idle', user: null }],
-                [{ permissions: null, stateValue: 'provisioning', user: null }],
+            expect(subscriber).toHaveBeenCalledTimes(5);
+            expect(subscriber.mock.calls).toMatchObject([
                 [
-                    {
-                        permissions: [{ role: 'resource.write' }],
-                        stateValue: 'authorizing',
-                        user: { name: 'Bob' },
-                    },
+                    [
+                        {
+                            context: { permissions: null, user: null },
+                            value: 'idle',
+                        },
+                        {
+                            type: 'xstate.init', // this is the init from xstate
+                        },
+                    ],
                 ],
                 [
-                    {
-                        permissions: [{ role: 'resource.write' }],
-                        stateValue: 'granted',
-                        user: { name: 'Bob' },
-                    },
+                    [
+                        { context: { permissions: null, user: null }, value: 'idle' },
+                        {
+                            type: 'RESET', // this is due to the challenging state in the authentication machine
+                        },
+                    ],
+                ],
+                [
+                    [
+                        { context: { permissions: null, user: null }, value: 'provisioning' },
+                        {
+                            type: 'PROVISION',
+                        },
+                    ],
+                ],
+                [
+                    [
+                        {
+                            context: {
+                                permissions: [{ role: 'resource.write' }],
+                                user: { name: 'Bob' },
+                            },
+                            value: 'authorizing',
+                        },
+                        {
+                            type: 'AUTHORIZE',
+                        },
+                    ],
+                ],
+                [
+                    [
+                        {
+                            context: {
+                                permissions: [{ role: 'resource.write' }],
+                                user: { name: 'Bob' },
+                            },
+                            value: 'granted',
+                        },
+                        {
+                            type: 'GRANT',
+                        },
+                    ],
                 ],
             ]);
             expect(firewall.state.value).toBe('granted');
 
-            expect(proxy.authorize).toHaveBeenCalledTimes(1);
-            expect(proxy.authorize).toHaveBeenCalledWith(
+            expect(guard).toHaveBeenCalledTimes(1);
+            expect(guard).toHaveBeenCalledWith(
                 { role: 'ADMIN' },
+                { name: 'Bob' },
                 [{ role: 'resource.write' }],
                 [
                     {
@@ -118,7 +198,6 @@ describe('Fortress', () => {
             expect.assertions(11);
 
             const proxy = createTestProxy({
-                authorize: new Error('Not Allowed'),
                 challenge: {
                     token: 'abc123',
                 },
@@ -128,7 +207,8 @@ describe('Fortress', () => {
                 },
             });
 
-            const fortress = new Fortress(proxy);
+            const guard = jest.fn().mockRejectedValue(new Error('Denied'));
+            const fortress = new Fortress(proxy, guard);
             const firewall = fortress.createFirewall({ role: 'ADMIN' });
 
             expect(fortress.state.value).toBe('idle');
@@ -141,30 +221,70 @@ describe('Fortress', () => {
 
             await firewall.waitFor('denied');
 
-            expect(subscriber).toHaveBeenCalledTimes(4);
-            expect(subscriber.mock.calls).toEqual([
-                [{ permissions: null, stateValue: 'idle', user: null }],
-                [{ permissions: null, stateValue: 'provisioning', user: null }],
+            expect(subscriber).toHaveBeenCalledTimes(5);
+            expect(subscriber.mock.calls).toMatchObject([
                 [
-                    {
-                        permissions: [{ role: 'resource.write' }],
-                        stateValue: 'authorizing',
-                        user: { name: 'Bob' },
-                    },
+                    [
+                        {
+                            context: { permissions: null, user: null },
+                            value: 'idle',
+                        },
+                        {
+                            type: 'xstate.init',
+                        },
+                    ],
                 ],
                 [
-                    {
-                        permissions: [{ role: 'resource.write' }],
-                        stateValue: 'denied',
-                        user: { name: 'Bob' },
-                    },
+                    [
+                        { context: { permissions: null, user: null }, value: 'idle' },
+                        {
+                            type: 'RESET',
+                        },
+                    ],
+                ],
+                [
+                    [
+                        { context: { permissions: null, user: null }, value: 'provisioning' },
+                        {
+                            type: 'PROVISION',
+                        },
+                    ],
+                ],
+                [
+                    [
+                        {
+                            context: {
+                                permissions: [{ role: 'resource.write' }],
+                                user: { name: 'Bob' },
+                            },
+                            value: 'authorizing',
+                        },
+                        {
+                            type: 'AUTHORIZE',
+                        },
+                    ],
+                ],
+                [
+                    [
+                        {
+                            context: {
+                                permissions: [{ role: 'resource.write' }],
+                                user: { name: 'Bob' },
+                            },
+                            value: 'denied',
+                        },
+                        {
+                            type: 'DENY',
+                        },
+                    ],
                 ],
             ]);
             expect(firewall.state.value).toBe('denied');
 
-            expect(proxy.authorize).toHaveBeenCalledTimes(1);
-            expect(proxy.authorize).toHaveBeenCalledWith(
+            expect(guard).toHaveBeenCalledTimes(1);
+            expect(guard).toHaveBeenCalledWith(
                 { role: 'ADMIN' },
+                { name: 'Bob' },
                 [{ role: 'resource.write' }],
                 [
                     {

@@ -2,20 +2,23 @@ import { AuthorizationService } from './service';
 
 import { AuthenticationService } from '../authentication/service';
 import { Gateway } from '../core/gateway';
-import { Proxy } from '../types';
+import { Guard, Proxy } from '../types';
 import { AuthorizationContext, AuthorizationEvent } from './machine';
 
 export class AuthorizationGateway extends Gateway<AuthorizationService> {
     private authenticationService: AuthenticationService;
+    private guard: Guard;
 
     constructor(
         proxy: Proxy,
-        lazyService: () => AuthorizationService,
+        guard: Guard,
+        deferredAuthorizationService: () => AuthorizationService,
         authenticationService: AuthenticationService,
     ) {
-        super(proxy, lazyService);
+        super(proxy, deferredAuthorizationService);
 
         this.authenticationService = authenticationService;
+        this.guard = guard;
     }
 
     private get challenges() {
@@ -36,9 +39,13 @@ export class AuthorizationGateway extends Gateway<AuthorizationService> {
     }
 
     public async authorize(context: AuthorizationContext, event: AuthorizationEvent) {
+        const { user, permissions } = context;
         try {
-            await this.proxy.authorize(event.query, context.permissions, this.challenges);
-            this.service.grant();
+            if (await this.guard(event.query, user, permissions, this.challenges)) {
+                this.service.grant();
+            } else {
+                this.service.deny();
+            }
         } catch (error) {
             this.service.deny({ error });
         }

@@ -1,5 +1,6 @@
-import { fromEventPattern, Observable, Subject } from 'rxjs';
-import { shareReplay, takeWhile } from 'rxjs/operators';
+import { cloneDeep } from 'lodash';
+import { fromEventPattern, interval, Observable, Subject } from 'rxjs';
+import { delayWhen, filter, first, map, shareReplay, takeWhile } from 'rxjs/operators';
 import { EventObject, interpret, Interpreter, State, StateMachine, StateSchema } from 'xstate';
 
 export class ObservableService<
@@ -22,12 +23,22 @@ export class ObservableService<
                 return this.service;
             },
             (_, service) => service.stop(),
-        ).pipe(shareReplay<[State<TContext, TEvent>, TEvent]>(1));
+        ).pipe(
+            shareReplay<[State<TContext, TEvent>, TEvent]>(1),
+            map(value => cloneDeep(value)),
+        );
 
         this.pipe = this.state$.pipe.bind(this.state$);
         this.subscribe = this.state$.subscribe.bind(this.state$);
 
-        this.event$.subscribe(event => this.service.send(event));
+        const serviceInitialized$ = interval(1).pipe(
+            filter(() => this.service.initialized),
+            first(),
+        );
+
+        this.event$
+            .pipe(delayWhen(() => serviceInitialized$))
+            .subscribe(event => this.service.send(event));
     }
 
     get state() {
