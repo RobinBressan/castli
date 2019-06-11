@@ -1,5 +1,6 @@
 import { Fortress } from '../fortress';
 import { createTestProxy } from './testProxy';
+import { createSubscriberAuthorizationEvent } from './tools';
 
 describe('Fortress', () => {
     it('idle => unauthenticated', async () => {
@@ -50,26 +51,14 @@ describe('Fortress', () => {
             expect(subscriber).toHaveBeenCalledTimes(2);
             expect(subscriber.mock.calls).toMatchObject([
                 [
-                    [
-                        {
-                            context: { permissions: null, user: null },
-                            value: 'idle',
-                        },
-                        {
-                            type: 'xstate.init',
-                        },
-                    ],
+                    createSubscriberAuthorizationEvent(null, null, 'idle', {
+                        type: 'xstate.init',
+                    }),
                 ],
                 [
-                    [
-                        {
-                            context: { permissions: null, user: null },
-                            value: 'unauthenticated',
-                        },
-                        {
-                            type: 'DEAUTHENTICATE',
-                        },
-                    ],
+                    createSubscriberAuthorizationEvent(null, null, 'unauthenticated', {
+                        type: 'DEAUTHENTICATE',
+                    }),
                 ],
             ]);
             expect(firewall.state.value).toBe('unauthenticated');
@@ -111,59 +100,40 @@ describe('Fortress', () => {
             expect(subscriber).toHaveBeenCalledTimes(5);
             expect(subscriber.mock.calls).toMatchObject([
                 [
-                    [
-                        {
-                            context: { permissions: null, user: null },
-                            value: 'idle',
-                        },
-                        {
-                            type: 'xstate.init', // this is the init from xstate
-                        },
-                    ],
+                    createSubscriberAuthorizationEvent(null, null, 'idle', {
+                        type: 'xstate.init', // this is the init from xstate
+                    }),
                 ],
                 [
-                    [
-                        { context: { permissions: null, user: null }, value: 'idle' },
-                        {
-                            type: 'RESET', // this is due to the challenging state in the authentication machine
-                        },
-                    ],
+                    createSubscriberAuthorizationEvent(null, null, 'idle', {
+                        type: 'RESET', // this is due to the challenging state in the authentication machine
+                    }),
+                ],
+
+                [
+                    createSubscriberAuthorizationEvent(null, null, 'provisioning', {
+                        type: 'PROVISION',
+                    }),
                 ],
                 [
-                    [
-                        { context: { permissions: null, user: null }, value: 'provisioning' },
-                        {
-                            type: 'PROVISION',
-                        },
-                    ],
-                ],
-                [
-                    [
-                        {
-                            context: {
-                                permissions: [{ role: 'resource.write' }],
-                                user: { name: 'Bob' },
-                            },
-                            value: 'authorizing',
-                        },
+                    createSubscriberAuthorizationEvent(
+                        { name: 'Bob' },
+                        [{ role: 'resource.write' }],
+                        'authorizing',
                         {
                             type: 'AUTHORIZE',
                         },
-                    ],
+                    ),
                 ],
                 [
-                    [
-                        {
-                            context: {
-                                permissions: [{ role: 'resource.write' }],
-                                user: { name: 'Bob' },
-                            },
-                            value: 'granted',
-                        },
+                    createSubscriberAuthorizationEvent(
+                        { name: 'Bob' },
+                        [{ role: 'resource.write' }],
+                        'granted',
                         {
                             type: 'GRANT',
                         },
-                    ],
+                    ),
                 ],
             ]);
             expect(firewall.state.value).toBe('granted');
@@ -224,59 +194,40 @@ describe('Fortress', () => {
             expect(subscriber).toHaveBeenCalledTimes(5);
             expect(subscriber.mock.calls).toMatchObject([
                 [
-                    [
-                        {
-                            context: { permissions: null, user: null },
-                            value: 'idle',
-                        },
-                        {
-                            type: 'xstate.init',
-                        },
-                    ],
+                    createSubscriberAuthorizationEvent(null, null, 'idle', {
+                        type: 'xstate.init', // this is the init from xstate
+                    }),
                 ],
                 [
-                    [
-                        { context: { permissions: null, user: null }, value: 'idle' },
-                        {
-                            type: 'RESET',
-                        },
-                    ],
+                    createSubscriberAuthorizationEvent(null, null, 'idle', {
+                        type: 'RESET', // this is due to the challenging state in the authentication machine
+                    }),
+                ],
+
+                [
+                    createSubscriberAuthorizationEvent(null, null, 'provisioning', {
+                        type: 'PROVISION',
+                    }),
                 ],
                 [
-                    [
-                        { context: { permissions: null, user: null }, value: 'provisioning' },
-                        {
-                            type: 'PROVISION',
-                        },
-                    ],
-                ],
-                [
-                    [
-                        {
-                            context: {
-                                permissions: [{ role: 'resource.write' }],
-                                user: { name: 'Bob' },
-                            },
-                            value: 'authorizing',
-                        },
+                    createSubscriberAuthorizationEvent(
+                        { name: 'Bob' },
+                        [{ role: 'resource.write' }],
+                        'authorizing',
                         {
                             type: 'AUTHORIZE',
                         },
-                    ],
+                    ),
                 ],
                 [
-                    [
-                        {
-                            context: {
-                                permissions: [{ role: 'resource.write' }],
-                                user: { name: 'Bob' },
-                            },
-                            value: 'denied',
-                        },
+                    createSubscriberAuthorizationEvent(
+                        { name: 'Bob' },
+                        [{ role: 'resource.write' }],
+                        'denied',
                         {
                             type: 'DENY',
                         },
-                    ],
+                    ),
                 ],
             ]);
             expect(firewall.state.value).toBe('denied');
