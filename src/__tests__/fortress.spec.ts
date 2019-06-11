@@ -1,10 +1,10 @@
 import { Fortress } from '../fortress';
 import { createTestProxy } from './testProxy';
-import { createSubscriberAuthorizationEvent } from './tools';
+import { createSubscriberAuthenticationEvent } from './tools';
 
 describe('Fortress', () => {
     it('idle => unauthenticated', async () => {
-        expect.assertions(2);
+        expect.assertions(3);
 
         const proxy = createTestProxy({
             challenge: {
@@ -13,249 +13,265 @@ describe('Fortress', () => {
         });
 
         const fortress = new Fortress(proxy, () => true);
+        const subscriber = jest.fn();
+        fortress.subscribe(subscriber);
 
         expect(fortress.state.value).toBe('idle');
         fortress.deauthenticate();
         await fortress.waitFor('unauthenticated');
+
         expect(fortress.state.value).toBe('unauthenticated');
+        expect(subscriber.mock.calls).toMatchObject([
+            [
+                createSubscriberAuthenticationEvent([], 'idle', {
+                    type: 'xstate.init', // this is the init from xstate
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([], 'unauthenticated', {
+                    type: 'DEAUTHENTICATE',
+                }),
+            ],
+        ]);
     });
 
-    describe('createFirewall()', () => {
-        it('idle => unauthenticated', async () => {
-            expect.assertions(8);
+    it('idle => challenging => authenticated', async () => {
+        expect.assertions(3);
 
-            const proxy = createTestProxy({
-                challenge: {
-                    token: 'abc123',
-                },
-                provision: {
-                    permissions: [{ role: 'resource.write' }],
-                    user: { name: 'Bob' },
-                },
-            });
-
-            const guard = jest.fn().mockReturnValue(true);
-            const fortress = new Fortress(proxy, guard);
-            const firewall = fortress.createFirewall({ role: 'ADMIN' });
-
-            expect(fortress.state.value).toBe('idle');
-            expect(firewall.state.value).toBe('idle');
-
-            fortress.deauthenticate();
-
-            const subscriber = jest.fn();
-            firewall.subscribe(subscriber);
-
-            await firewall.waitFor('unauthenticated');
-
-            expect(subscriber).toHaveBeenCalledTimes(2);
-            expect(subscriber.mock.calls).toMatchObject([
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'idle', {
-                        type: 'xstate.init',
-                    }),
-                ],
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'unauthenticated', {
-                        type: 'DEAUTHENTICATE',
-                    }),
-                ],
-            ]);
-            expect(firewall.state.value).toBe('unauthenticated');
-
-            expect(guard).not.toHaveBeenCalled();
-            expect(proxy.challenge).not.toHaveBeenCalled();
-            expect(proxy.provision).not.toHaveBeenCalled();
-
-            firewall.dispose();
+        const proxy = createTestProxy({
+            challenge: {
+                token: 'abc123',
+            },
         });
 
-        it('idle => provisioning => authorizing => granted', async () => {
-            expect.assertions(11);
+        const fortress = new Fortress(proxy, () => true);
+        const subscriber = jest.fn();
+        fortress.subscribe(subscriber);
 
-            const proxy = createTestProxy({
-                challenge: {
-                    token: 'abc123',
-                },
-                provision: {
-                    permissions: [{ role: 'resource.write' }],
-                    user: { name: 'Bob' },
-                },
-            });
+        expect(fortress.state.value).toBe('idle');
+        fortress.challenge({ email: 'bob@localhost', password: 'password' });
+        await fortress.waitFor('authenticated');
 
-            const guard = jest.fn().mockReturnValue(true);
-            const fortress = new Fortress(proxy, guard);
-            const firewall = fortress.createFirewall({ role: 'ADMIN' });
-
-            expect(fortress.state.value).toBe('idle');
-            expect(fortress.state.value).toBe('idle');
-
-            fortress.challenge({ email: 'bob@localhost', password: 'password' });
-
-            const subscriber = jest.fn();
-            firewall.subscribe(subscriber);
-
-            await firewall.waitFor('granted');
-
-            expect(subscriber).toHaveBeenCalledTimes(5);
-            expect(subscriber.mock.calls).toMatchObject([
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'idle', {
-                        type: 'xstate.init', // this is the init from xstate
-                    }),
-                ],
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'idle', {
-                        type: 'RESET', // this is due to the challenging state in the authentication machine
-                    }),
-                ],
-
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'provisioning', {
-                        type: 'PROVISION',
-                    }),
-                ],
-                [
-                    createSubscriberAuthorizationEvent(
-                        { name: 'Bob' },
-                        [{ role: 'resource.write' }],
-                        'authorizing',
+        expect(fortress.state.value).toBe('authenticated');
+        expect(subscriber.mock.calls).toMatchObject([
+            [
+                createSubscriberAuthenticationEvent([], 'idle', {
+                    type: 'xstate.init', // this is the init from xstate
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([], 'challenging', {
+                    query: { email: 'bob@localhost', password: 'password' },
+                    type: 'CHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent(
+                    [
                         {
-                            type: 'AUTHORIZE',
+                            token: 'abc123',
                         },
-                    ),
-                ],
-                [
-                    createSubscriberAuthorizationEvent(
-                        { name: 'Bob' },
-                        [{ role: 'resource.write' }],
-                        'granted',
-                        {
-                            type: 'GRANT',
-                        },
-                    ),
-                ],
-            ]);
-            expect(firewall.state.value).toBe('granted');
-
-            expect(guard).toHaveBeenCalledTimes(1);
-            expect(guard).toHaveBeenCalledWith(
-                { role: 'ADMIN' },
-                { name: 'Bob' },
-                [{ role: 'resource.write' }],
-                [
+                    ],
+                    'authenticated',
                     {
-                        token: 'abc123',
+                        type: 'AUTHENTICATE',
                     },
-                ],
-            );
-            expect(proxy.challenge).toHaveBeenCalledTimes(1);
-            expect(proxy.challenge).toHaveBeenCalledWith(
-                {
-                    email: 'bob@localhost',
-                    password: 'password',
-                },
-                [],
-                expect.any(Function),
-            );
-            expect(proxy.provision).toHaveBeenCalledTimes(1);
-            expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [{ token: 'abc123' }]);
+                ),
+            ],
+        ]);
+    });
 
-            firewall.dispose();
+    it('idle => challenging => unauthenticated', async () => {
+        expect.assertions(3);
+
+        const proxy = createTestProxy({
+            challenge: new Error('Invalid credentials'),
         });
 
-        it('idle => provisioning => authorizing => denied', async () => {
-            expect.assertions(11);
+        const fortress = new Fortress(proxy, () => true);
+        const subscriber = jest.fn();
+        fortress.subscribe(subscriber);
 
-            const proxy = createTestProxy({
-                challenge: {
+        expect(fortress.state.value).toBe('idle');
+        fortress.challenge({ email: 'bob@localhost', password: 'password' });
+        await fortress.waitFor('unauthenticated');
+
+        expect(fortress.state.value).toBe('unauthenticated');
+        expect(subscriber.mock.calls).toMatchObject([
+            [
+                createSubscriberAuthenticationEvent([], 'idle', {
+                    type: 'xstate.init', // this is the init from xstate
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([], 'challenging', {
+                    query: { email: 'bob@localhost', password: 'password' },
+                    type: 'CHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([], 'unauthenticated', {
+                    query: { error: new Error('Invalid credentials') },
+                    type: 'DEAUTHENTICATE',
+                }),
+            ],
+        ]);
+    });
+
+    it('idle => challenging => idle => challenging => authenticated', async () => {
+        expect.assertions(6);
+
+        const proxy = createTestProxy({
+            challenge: [
+                {
+                    authCode: 'def456',
+                },
+                {
                     token: 'abc123',
                 },
-                provision: {
-                    permissions: [{ role: 'resource.write' }],
-                    user: { name: 'Bob' },
-                },
-            });
-
-            const guard = jest.fn().mockRejectedValue(new Error('Denied'));
-            const fortress = new Fortress(proxy, guard);
-            const firewall = fortress.createFirewall({ role: 'ADMIN' });
-
-            expect(fortress.state.value).toBe('idle');
-            expect(firewall.state.value).toBe('idle');
-
-            fortress.challenge({ email: 'bob@localhost', password: 'password' });
-
-            const subscriber = jest.fn();
-            firewall.subscribe(subscriber);
-
-            await firewall.waitFor('denied');
-
-            expect(subscriber).toHaveBeenCalledTimes(5);
-            expect(subscriber.mock.calls).toMatchObject([
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'idle', {
-                        type: 'xstate.init', // this is the init from xstate
-                    }),
-                ],
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'idle', {
-                        type: 'RESET', // this is due to the challenging state in the authentication machine
-                    }),
-                ],
-
-                [
-                    createSubscriberAuthorizationEvent(null, null, 'provisioning', {
-                        type: 'PROVISION',
-                    }),
-                ],
-                [
-                    createSubscriberAuthorizationEvent(
-                        { name: 'Bob' },
-                        [{ role: 'resource.write' }],
-                        'authorizing',
-                        {
-                            type: 'AUTHORIZE',
-                        },
-                    ),
-                ],
-                [
-                    createSubscriberAuthorizationEvent(
-                        { name: 'Bob' },
-                        [{ role: 'resource.write' }],
-                        'denied',
-                        {
-                            type: 'DENY',
-                        },
-                    ),
-                ],
-            ]);
-            expect(firewall.state.value).toBe('denied');
-
-            expect(guard).toHaveBeenCalledTimes(1);
-            expect(guard).toHaveBeenCalledWith(
-                { role: 'ADMIN' },
-                { name: 'Bob' },
-                [{ role: 'resource.write' }],
-                [
-                    {
-                        token: 'abc123',
-                    },
-                ],
-            );
-            expect(proxy.challenge).toHaveBeenCalledTimes(1);
-            expect(proxy.challenge).toHaveBeenCalledWith(
-                {
-                    email: 'bob@localhost',
-                    password: 'password',
-                },
-                [],
-                expect.any(Function),
-            );
-            expect(proxy.provision).toHaveBeenCalledTimes(1);
-            expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [{ token: 'abc123' }]);
-
-            firewall.dispose();
+            ],
         });
+
+        const fortress = new Fortress(proxy, () => true);
+        const subscriber = jest.fn();
+        fortress.subscribe(subscriber);
+
+        expect(fortress.state.value).toBe('idle');
+        fortress.challenge({ email: 'bob@localhost', password: 'password' });
+        await fortress.waitFor('challenging');
+        await fortress.waitFor('idle');
+
+        expect(fortress.state.value).toBe('idle');
+        expect(fortress.state.context).toEqual({
+            challenges: [
+                {
+                    authCode: 'def456',
+                },
+            ],
+        });
+        fortress.challenge({ code: '123456' });
+        await fortress.waitFor('authenticated');
+
+        expect(fortress.state.value).toBe('authenticated');
+        expect(fortress.state.context).toEqual({
+            challenges: [
+                {
+                    authCode: 'def456',
+                },
+                {
+                    token: 'abc123',
+                },
+            ],
+        });
+        expect(subscriber.mock.calls).toMatchObject([
+            [
+                createSubscriberAuthenticationEvent([], 'idle', {
+                    type: 'xstate.init', // this is the init from xstate
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([], 'challenging', {
+                    query: { email: 'bob@localhost', password: 'password' },
+                    type: 'CHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'idle', {
+                    type: 'RECHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'challenging', {
+                    query: { code: '123456' },
+                    type: 'CHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent(
+                    [
+                        { authCode: 'def456' },
+                        {
+                            token: 'abc123',
+                        },
+                    ],
+                    'authenticated',
+                    {
+                        type: 'AUTHENTICATE',
+                    },
+                ),
+            ],
+        ]);
+    });
+
+    it('idle => challenging => idle => challenging => unauthenticated', async () => {
+        expect.assertions(6);
+
+        const proxy = createTestProxy({
+            challenge: [
+                {
+                    authCode: 'def456',
+                },
+                new Error('Bad code'),
+            ],
+        });
+
+        const fortress = new Fortress(proxy, () => true);
+        const subscriber = jest.fn();
+        fortress.subscribe(subscriber);
+
+        expect(fortress.state.value).toBe('idle');
+        fortress.challenge({ email: 'bob@localhost', password: 'password' });
+        await fortress.waitFor('challenging');
+        await fortress.waitFor('idle');
+
+        expect(fortress.state.value).toBe('idle');
+        expect(fortress.state.context).toEqual({
+            challenges: [
+                {
+                    authCode: 'def456',
+                },
+            ],
+        });
+        fortress.challenge({ code: '123456' });
+        await fortress.waitFor('unauthenticated');
+
+        expect(fortress.state.value).toBe('unauthenticated');
+        expect(fortress.state.context).toEqual({
+            challenges: [
+                {
+                    authCode: 'def456',
+                },
+            ],
+        });
+        expect(subscriber.mock.calls).toMatchObject([
+            [
+                createSubscriberAuthenticationEvent([], 'idle', {
+                    type: 'xstate.init', // this is the init from xstate
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([], 'challenging', {
+                    query: { email: 'bob@localhost', password: 'password' },
+                    type: 'CHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'idle', {
+                    type: 'RECHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'challenging', {
+                    query: { code: '123456' },
+                    type: 'CHALLENGE',
+                }),
+            ],
+            [
+                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'unauthenticated', {
+                    query: { error: new Error('Bad code') },
+                    type: 'DEAUTHENTICATE',
+                }),
+            ],
+        ]);
     });
 });
