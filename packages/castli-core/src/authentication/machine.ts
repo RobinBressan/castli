@@ -8,9 +8,13 @@ export type AuthenticationEvent =
     | Event<'CHALLENGE'>
     | Event<'DEAUTHENTICATE'>
     | Event<'RECHALLENGE'>;
-export type AuthenticationStates = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
+export type AuthenticationStateValues =
+    | 'authenticated'
+    | 'challenging'
+    | 'idle'
+    | 'unauthenticated';
 export interface AuthenticationStateSchema {
-    states: Record<AuthenticationStates, {}>;
+    states: Record<AuthenticationStateValues, {}>;
 }
 
 export interface AuthenticationContext {

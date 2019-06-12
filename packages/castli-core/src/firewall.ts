@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
 
-import { AuthenticationStates } from './authentication/machine';
+import { AuthenticationStateValues } from './authentication/machine';
 import { AuthenticationService } from './authentication/service';
 import { AuthorizationStateSchema } from './authorization/machine';
 import { AuthorizationService } from './authorization/service';
@@ -52,7 +52,7 @@ export class Firewall {
     private onAuthenticationStateChange = value => {
         const [state] = value;
 
-        switch (state.value as AuthenticationStates) {
+        switch (state.value as AuthenticationStateValues) {
             case 'authenticated':
                 this.authorizationService.provision(this.query);
                 break;
