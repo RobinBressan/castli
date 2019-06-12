@@ -1,4 +1,4 @@
-import { Fortress, FortressContext, FortressStateValue } from 'castli-core';
+import { Fortress, FortressContext, FortressStateValue } from '@castli/core';
 import * as React from 'react';
 
 export interface FortressReactContext {

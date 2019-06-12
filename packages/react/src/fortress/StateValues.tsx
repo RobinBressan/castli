@@ -1,4 +1,4 @@
-import { FortressStateValue } from 'castli-core';
+import { FortressStateValue } from '@castli/core';
 import { createStateValueComponent } from '../createStateValueComponent';
 import { context, FortressReactContext } from './context';
 

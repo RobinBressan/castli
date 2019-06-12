@@ -4,7 +4,7 @@ import {
     FortressStateValue,
     Guard,
     Proxy,
-} from 'castli-core';
+} from '@castli/core';
 import * as React from 'react';
 
 import { context } from './context';

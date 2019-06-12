@@ -1,4 +1,4 @@
-import { Proxy } from 'castli-core';
+import { Proxy } from '@castli/core';
 import { flatten, get } from 'lodash';
 
 type Response = Record<string, any> | Error;
@@ -21,8 +21,8 @@ function createMock(
 ) {
     let mock = jest.fn();
     flatten([response]).forEach((value, index) => {
-        mock = mock.mockImplementationOnce((...args) => {
-            const result = compile(value);
+        mock = mock.mockImplementationOnce(async (...args) => {
+            const result = compile(await value);
             if (postHook) {
                 postHook(index, ...args);
             }

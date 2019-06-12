@@ -1,5 +1,5 @@
 {
-    "name": "react-castli",
+    "name": "@castli/react",
     "version": "1.0.0",
     "description": "React connector for castli",
     "author": "RobinBressan",
@@ -9,19 +9,28 @@
         "test": "jest"
     },
     "devDependencies": {
+        "@castli/test-utils": "^1.0.0",
         "@testing-library/react": "8.0.1",
         "@types/react": "16.8.19",
-        "castli-test-tools": "^1.0.0",
         "jest-dom": "3.5.0",
         "react": "16.8.6",
         "react-dom": "16.8.6"
     },
     "dependencies": {
-        "castli-core": "^1.0.0"
+        "@castli/core": "^1.0.0"
     },
     "jest": {
+        "globals": {
+            "ts-jest": {
+                "diagnostics": {
+                    "ignoreCodes": [
+                        151001
+                    ]
+                }
+            }
+        },
         "transformIgnorePatterns": [
-            "<rootDir>/node_modules/(?!castli-)"
+            "<rootDir>/node_modules/(?!@castli)"
         ],
         "moduleFileExtensions": [
             "ts",

@@ -14,7 +14,6 @@ export function createStateValueComponent<StateValue, C extends Context<StateVal
 ) {
     const Component: React.SFC<StateValueProps> = ({ children }) => {
         const { stateValue: currentStateValue } = React.useContext(context);
-
         return stateValue === currentStateValue ? <>{children}</> : null;
     };
 

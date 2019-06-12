@@ -1,4 +1,4 @@
-import { FirewallContext, FirewallStateValue } from 'castli-core';
+import { FirewallContext, FirewallStateValue } from '@castli/core';
 import * as React from 'react';
 
 export interface FirewallReactContext {

@@ -1,4 +1,4 @@
-import { FirewallStateValue } from 'castli-core';
+import { FirewallStateValue } from '@castli/core';
 import { createStateValueComponent } from '../createStateValueComponent';
 import { context, FirewallReactContext } from './context';
 

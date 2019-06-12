@@ -1,4 +1,4 @@
-import { FirewallContext, FirewallStateValue } from 'castli-core';
+import { FirewallContext, FirewallStateValue } from '@castli/core';
 import { useEffect, useState } from 'react';
 import { useFortress } from '../fortress';
 

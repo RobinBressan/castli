@@ -1,5 +1,5 @@
 {
-    "name": "castli-core",
+    "name": "@castli/core",
     "version": "1.0.0",
     "main": "index.js",
     "author": "RobinBressan",
@@ -35,6 +35,6 @@
         "testRegex": "/__tests__/.*\\.spec\\.(ts|tsx|js)$"
     },
     "devDependencies": {
-        "castli-test-tools": "^1.0.0"
+        "@castli/test-utils": "^1.0.0"
     }
 }

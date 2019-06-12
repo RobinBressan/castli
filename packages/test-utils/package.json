@@ -1,0 +1,12 @@
+{
+    "name": "@castli/test-utils",
+    "version": "1.0.0",
+    "description": "Test helpers for castli",
+    "main": "index.js",
+    "author": "RobinBressan",
+    "license": "MIT",
+    "private": true,
+    "dependencies": {
+        "@castli/core": "^1.0.0"
+    }
+}

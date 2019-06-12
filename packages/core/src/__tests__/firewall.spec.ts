@@ -1,4 +1,4 @@
-import { createTestProxy } from 'castli-test-tools';
+import { createTestProxy } from '@castli/test-utils';
 
 import { Fortress } from '../../';
 import { createFirewallEventSubscriber } from './subscribers';
