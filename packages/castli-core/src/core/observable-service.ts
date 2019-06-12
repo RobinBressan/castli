@@ -14,11 +14,10 @@ import {
  * An ObservableService is an observable wrapper around a state machine service.
  * It handle the initialization of the service, and handle the dispatch of event in it.
  */
-export class ObservableService<
-    Context = Record<string, any>,
-    StateSchema extends BaseStateSchema = any,
-    Event extends EventObject = any,
-    StateValue = any
+export abstract class ObservableService<
+    Context extends Record<string, any> = Record<string, any>,
+    Event extends EventObject = EventObject,
+    StateSchema extends BaseStateSchema = any
 > {
     public readonly state$: Observable<[State<Context, Event>, Event]>;
     public readonly pipe: Observable<[State<Context, Event>, Event]>['pipe'];
@@ -64,7 +63,7 @@ export class ObservableService<
         this.event$.next(event);
     }
 
-    public waitFor(stateValue: StateValue) {
+    public waitFor(stateValue: keyof StateSchema['states']) {
         return this.state$
             .pipe(
                 takeWhile(value => {

@@ -10,6 +10,7 @@ export type AuthorizationEvent =
     | Event<'GRANT'>
     | Event<'PROVISION'>
     | Event<'DEAUTHENTICATE'>;
+
 export type AuthorizationStateValue =
     | 'authorizing'
     | 'denied'
@@ -17,6 +18,7 @@ export type AuthorizationStateValue =
     | 'idle'
     | 'provisioning'
     | 'unauthenticated';
+
 export interface AuthorizationStateSchema {
     states: Record<AuthorizationStateValue, {}>;
 }

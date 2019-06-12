@@ -10,8 +10,8 @@ import {
 
 export class AuthenticationService extends ObservableService<
     AuthenticationContext,
-    AuthenticationStateSchema,
-    AuthenticationEvent
+    AuthenticationEvent,
+    AuthenticationStateSchema
 > {
     constructor(proxy: Proxy) {
         super(createMachine(new AuthenticationGateway(proxy, () => this)));

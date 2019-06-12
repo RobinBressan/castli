@@ -12,10 +12,10 @@ export class AuthorizationGateway extends Gateway<AuthorizationService> {
     constructor(
         proxy: Proxy,
         guard: Guard,
-        deferredAuthorizationService: () => AuthorizationService,
+        deferredService: () => AuthorizationService,
         fortress: Fortress,
     ) {
-        super(proxy, deferredAuthorizationService);
+        super(proxy, deferredService);
 
         this.fortress = fortress;
         this.guard = guard;

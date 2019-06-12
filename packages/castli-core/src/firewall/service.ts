@@ -6,15 +6,13 @@ import {
     AuthorizationContext,
     AuthorizationEvent,
     AuthorizationStateSchema,
-    AuthorizationStateValue,
     createMachine,
 } from './machine';
 
 export class AuthorizationService extends ObservableService<
     AuthorizationContext,
-    AuthorizationStateSchema,
     AuthorizationEvent,
-    AuthorizationStateValue
+    AuthorizationStateSchema
 > {
     constructor(proxy: Proxy, guard: Guard, fortress: Fortress) {
         super(createMachine(new AuthorizationGateway(proxy, guard, () => this, fortress)));
