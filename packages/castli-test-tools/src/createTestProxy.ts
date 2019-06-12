@@ -1,5 +1,5 @@
+import { Proxy } from 'castli-core';
 import { flatten, get } from 'lodash';
-import { Proxy } from '../../';
 
 type Response = Record<string, any> | Error;
 

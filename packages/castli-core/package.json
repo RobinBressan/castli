@@ -5,7 +5,7 @@
     "author": "RobinBressan",
     "license": "MIT",
     "scripts": {
-        "test": "yarn jest"
+        "test": "jest"
     },
     "dependencies": {
         "lodash": "4.17.11",
@@ -33,5 +33,8 @@
         },
         "testEnvironment": "node",
         "testRegex": "/__tests__/.*\\.spec\\.(ts|tsx|js)$"
+    },
+    "devDependencies": {
+        "castli-test-tools": "^1.0.0"
     }
 }

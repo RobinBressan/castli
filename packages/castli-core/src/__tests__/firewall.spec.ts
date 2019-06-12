@@ -1,6 +1,7 @@
+import { createTestProxy } from 'castli-test-tools';
+
 import { Fortress } from '../../';
-import { createTestProxy } from './testProxy';
-import { createFirewallEventSubscriber } from './tools';
+import { createFirewallEventSubscriber } from './subscribers';
 
 describe('Firewall', () => {
     it('idle => unauthenticated', async () => {
