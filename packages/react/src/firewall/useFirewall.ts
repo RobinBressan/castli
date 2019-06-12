@@ -12,13 +12,17 @@ export function useFirewall(query?: Record<string, any>) {
     });
 
     useEffect(() => {
+        const firewall = fortress.createFirewall(query);
         const subscription = fortress.createFirewall(query).subscribe(e => {
             const [state] = e;
             setFirewallStateValue(state.value as FirewallStateValue);
             setFirewallContext(state.context);
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            subscription.unsubscribe();
+            firewall.dispose();
+        };
     }, [fortress, query]);
 
     return { context, stateValue };
