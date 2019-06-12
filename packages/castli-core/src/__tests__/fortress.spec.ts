@@ -1,6 +1,6 @@
 import { Fortress } from '../../';
 import { createTestProxy } from './testProxy';
-import { createSubscriberAuthenticationEvent } from './tools';
+import { createFortressEventSubscriber } from './tools';
 
 describe('Fortress', () => {
     it('idle => unauthenticated', async () => {
@@ -23,12 +23,12 @@ describe('Fortress', () => {
         expect(fortress.state.value).toBe('unauthenticated');
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthenticationEvent([], 'idle', {
+                createFortressEventSubscriber([], 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([], 'unauthenticated', {
+                createFortressEventSubscriber([], 'unauthenticated', {
                     type: 'DEAUTHENTICATE',
                 }),
             ],
@@ -55,18 +55,18 @@ describe('Fortress', () => {
         expect(fortress.state.value).toBe('authenticated');
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthenticationEvent([], 'idle', {
+                createFortressEventSubscriber([], 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([], 'challenging', {
+                createFortressEventSubscriber([], 'challenging', {
                     query: { email: 'bob@localhost', password: 'password' },
                     type: 'CHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent(
+                createFortressEventSubscriber(
                     [
                         {
                             token: 'abc123',
@@ -99,18 +99,18 @@ describe('Fortress', () => {
         expect(fortress.state.value).toBe('unauthenticated');
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthenticationEvent([], 'idle', {
+                createFortressEventSubscriber([], 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([], 'challenging', {
+                createFortressEventSubscriber([], 'challenging', {
                     query: { email: 'bob@localhost', password: 'password' },
                     type: 'CHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([], 'unauthenticated', {
+                createFortressEventSubscriber([], 'unauthenticated', {
                     query: { error: new Error('Invalid credentials') },
                     type: 'DEAUTHENTICATE',
                 }),
@@ -165,29 +165,29 @@ describe('Fortress', () => {
         });
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthenticationEvent([], 'idle', {
+                createFortressEventSubscriber([], 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([], 'challenging', {
+                createFortressEventSubscriber([], 'challenging', {
                     query: { email: 'bob@localhost', password: 'password' },
                     type: 'CHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'idle', {
+                createFortressEventSubscriber([{ authCode: 'def456' }], 'idle', {
                     type: 'RECHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'challenging', {
+                createFortressEventSubscriber([{ authCode: 'def456' }], 'challenging', {
                     query: { code: '123456' },
                     type: 'CHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent(
+                createFortressEventSubscriber(
                     [
                         { authCode: 'def456' },
                         {
@@ -245,29 +245,29 @@ describe('Fortress', () => {
         });
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthenticationEvent([], 'idle', {
+                createFortressEventSubscriber([], 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([], 'challenging', {
+                createFortressEventSubscriber([], 'challenging', {
                     query: { email: 'bob@localhost', password: 'password' },
                     type: 'CHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'idle', {
+                createFortressEventSubscriber([{ authCode: 'def456' }], 'idle', {
                     type: 'RECHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'challenging', {
+                createFortressEventSubscriber([{ authCode: 'def456' }], 'challenging', {
                     query: { code: '123456' },
                     type: 'CHALLENGE',
                 }),
             ],
             [
-                createSubscriberAuthenticationEvent([{ authCode: 'def456' }], 'unauthenticated', {
+                createFortressEventSubscriber([{ authCode: 'def456' }], 'unauthenticated', {
                     query: { error: new Error('Bad code') },
                     type: 'DEAUTHENTICATE',
                 }),

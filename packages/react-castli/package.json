@@ -7,10 +7,10 @@
     "license": "MIT",
     "devDependencies": {
         "@types/react": "16.8.19",
-        "react": "16.8.6"
+        "react": "16.8.6",
+        "react-testing-library": "8.0.1"
     },
     "dependencies": {
-        "castli-core": "^1.0.0",
-        "react-testing-library": "8.0.1"
+        "castli-core": "^1.0.0"
     }
 }

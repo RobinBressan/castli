@@ -1,21 +1,16 @@
 import { ObservableService } from '../core/observable-service';
 import { Guard, Proxy } from '../core/types';
 import { Fortress } from '../fortress';
-import { AuthorizationGateway } from './gateway';
-import {
-    AuthorizationContext,
-    AuthorizationEvent,
-    AuthorizationStateSchema,
-    createMachine,
-} from './machine';
+import { FirewallGateway } from './gateway';
+import { createMachine, FirewallContext, FirewallEvent, FirewallStateSchema } from './machine';
 
-export class AuthorizationService extends ObservableService<
-    AuthorizationContext,
-    AuthorizationEvent,
-    AuthorizationStateSchema
+export class FirewallService extends ObservableService<
+    FirewallContext,
+    FirewallEvent,
+    FirewallStateSchema
 > {
     constructor(proxy: Proxy, guard: Guard, fortress: Fortress) {
-        super(createMachine(new AuthorizationGateway(proxy, guard, () => this, fortress)));
+        super(createMachine(new FirewallGateway(proxy, guard, () => this, fortress)));
     }
 
     public authorize(query?: Record<string, any>) {

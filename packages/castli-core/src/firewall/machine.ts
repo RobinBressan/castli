@@ -1,9 +1,9 @@
 import { Machine, State as BaseState } from 'xstate';
 
 import { Event, Permission, User } from '../core/types';
-import { AuthorizationGateway } from './gateway';
+import { FirewallGateway } from './gateway';
 
-export type AuthorizationEvent =
+export type FirewallEvent =
     | Event<'RESET'>
     | Event<'AUTHORIZE'>
     | Event<'DENY'>
@@ -11,7 +11,7 @@ export type AuthorizationEvent =
     | Event<'PROVISION'>
     | Event<'DEAUTHENTICATE'>;
 
-export type AuthorizationStateValue =
+export type FirewallStateValue =
     | 'authorizing'
     | 'denied'
     | 'granted'
@@ -19,19 +19,19 @@ export type AuthorizationStateValue =
     | 'provisioning'
     | 'unauthenticated';
 
-export interface AuthorizationStateSchema {
-    states: Record<AuthorizationStateValue, {}>;
+export interface FirewallStateSchema {
+    states: Record<FirewallStateValue, {}>;
 }
 
-export interface AuthorizationContext {
+export interface FirewallContext {
     permissions: Permission[];
     user: User;
 }
 
-export type State = BaseState<AuthorizationContext, AuthorizationEvent>;
+export type State = BaseState<FirewallContext, FirewallEvent>;
 
-export function createMachine(gateway: AuthorizationGateway) {
-    return Machine<AuthorizationContext, AuthorizationStateSchema, AuthorizationEvent>(
+export function createMachine(gateway: FirewallGateway) {
+    return Machine<FirewallContext, FirewallStateSchema, FirewallEvent>(
         {
             id: 'authorization',
             initial: 'idle',

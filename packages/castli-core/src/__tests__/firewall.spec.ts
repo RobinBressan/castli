@@ -1,6 +1,6 @@
 import { Fortress } from '../../';
 import { createTestProxy } from './testProxy';
-import { createSubscriberAuthorizationEvent } from './tools';
+import { createFirewallEventSubscriber } from './tools';
 
 describe('Firewall', () => {
     it('idle => unauthenticated', async () => {
@@ -33,12 +33,12 @@ describe('Firewall', () => {
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthorizationEvent(null, null, 'idle', {
+                createFirewallEventSubscriber(null, null, 'idle', {
                     type: 'xstate.init',
                 }),
             ],
             [
-                createSubscriberAuthorizationEvent(null, null, 'unauthenticated', {
+                createFirewallEventSubscriber(null, null, 'unauthenticated', {
                     type: 'DEAUTHENTICATE',
                 }),
             ],
@@ -82,23 +82,23 @@ describe('Firewall', () => {
         expect(subscriber).toHaveBeenCalledTimes(5);
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthorizationEvent(null, null, 'idle', {
+                createFirewallEventSubscriber(null, null, 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createSubscriberAuthorizationEvent(null, null, 'idle', {
+                createFirewallEventSubscriber(null, null, 'idle', {
                     type: 'RESET', // this is due to the challenging state in the authentication machine
                 }),
             ],
 
             [
-                createSubscriberAuthorizationEvent(null, null, 'provisioning', {
+                createFirewallEventSubscriber(null, null, 'provisioning', {
                     type: 'PROVISION',
                 }),
             ],
             [
-                createSubscriberAuthorizationEvent(
+                createFirewallEventSubscriber(
                     { name: 'Bob' },
                     [{ role: 'resource.write' }],
                     'authorizing',
@@ -108,7 +108,7 @@ describe('Firewall', () => {
                 ),
             ],
             [
-                createSubscriberAuthorizationEvent(
+                createFirewallEventSubscriber(
                     { name: 'Bob' },
                     [{ role: 'resource.write' }],
                     'granted',
@@ -175,23 +175,23 @@ describe('Firewall', () => {
         expect(subscriber).toHaveBeenCalledTimes(5);
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createSubscriberAuthorizationEvent(null, null, 'idle', {
+                createFirewallEventSubscriber(null, null, 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createSubscriberAuthorizationEvent(null, null, 'idle', {
+                createFirewallEventSubscriber(null, null, 'idle', {
                     type: 'RESET', // this is due to the challenging state in the authentication machine
                 }),
             ],
 
             [
-                createSubscriberAuthorizationEvent(null, null, 'provisioning', {
+                createFirewallEventSubscriber(null, null, 'provisioning', {
                     type: 'PROVISION',
                 }),
             ],
             [
-                createSubscriberAuthorizationEvent(
+                createFirewallEventSubscriber(
                     { name: 'Bob' },
                     [{ role: 'resource.write' }],
                     'authorizing',
@@ -201,7 +201,7 @@ describe('Firewall', () => {
                 ),
             ],
             [
-                createSubscriberAuthorizationEvent(
+                createFirewallEventSubscriber(
                     { name: 'Bob' },
                     [{ role: 'resource.write' }],
                     'denied',

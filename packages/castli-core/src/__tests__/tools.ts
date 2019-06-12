@@ -1,27 +1,27 @@
 import {
-    AuthenticationEvent,
-    AuthenticationStateValues,
-    AuthorizationEvent,
-    AuthorizationStateValues,
     Challenge,
     Event,
+    FirewallEvent,
+    FirewallStateValue,
+    FortressEvent,
+    FortressStateValue,
     Permission,
     User,
 } from '../../';
 
-export function createSubscriberAuthenticationEvent(
+export function createFortressEventSubscriber(
     challenges: Challenge[],
-    value: AuthenticationStateValues,
-    event: AuthenticationEvent | Event<'xstate.init'>,
+    value: FortressStateValue,
+    event: FortressEvent | Event<'xstate.init'>,
 ) {
     return [{ context: { challenges }, value }, event];
 }
 
-export function createSubscriberAuthorizationEvent(
+export function createFirewallEventSubscriber(
     user: User,
     permissions: Permission[],
-    value: AuthorizationStateValues,
-    event: AuthorizationEvent | Event<'xstate.init'>,
+    value: FirewallStateValue,
+    event: FirewallEvent | Event<'xstate.init'>,
 ) {
     return [{ context: { user, permissions }, value }, event];
 }

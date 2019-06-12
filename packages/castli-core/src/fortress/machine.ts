@@ -1,28 +1,28 @@
 import { Machine, State as BaseState } from 'xstate';
 
 import { Event } from '../core/types';
-import { AuthenticationGateway } from './gateway';
+import { FortressGateway } from './gateway';
 
-export type AuthenticationEvent =
+export type FortressEvent =
     | Event<'AUTHENTICATE'>
     | Event<'CHALLENGE'>
     | Event<'DEAUTHENTICATE'>
     | Event<'RECHALLENGE'>;
 
-export type AuthenticationStateValue = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
+export type FortressStateValue = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
 
-export interface AuthenticationStateSchema {
-    states: Record<AuthenticationStateValue, {}>;
+export interface FortressStateSchema {
+    states: Record<FortressStateValue, {}>;
 }
 
-export interface AuthenticationContext {
+export interface FortressContext {
     challenges: Array<Record<string, any>>;
 }
 
-export type State = BaseState<AuthenticationContext, AuthenticationEvent>;
+export type State = BaseState<FortressContext, FortressEvent>;
 
-export function createMachine(gateway: AuthenticationGateway) {
-    return Machine<AuthenticationContext, AuthenticationStateSchema, AuthenticationEvent>(
+export function createMachine(gateway: FortressGateway) {
+    return Machine<FortressContext, FortressStateSchema, FortressEvent>(
         {
             id: 'authentication',
             initial: 'idle',

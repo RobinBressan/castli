@@ -1,2 +1,2 @@
 export * from './facade';
-export { AuthorizationContext, AuthorizationEvent, AuthorizationStateValue } from './machine';
+export { FirewallContext, FirewallEvent, FirewallStateValue } from './machine';

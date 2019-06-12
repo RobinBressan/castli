@@ -1,2 +1,2 @@
 export * from './facade';
-export { AuthenticationContext, AuthenticationEvent, AuthenticationStateValue } from './machine';
+export { FortressContext, FortressEvent, FortressStateValue } from './machine';

@@ -1,20 +1,15 @@
 import { ObservableService } from '../core/observable-service';
 import { Proxy } from '../core/types';
-import { AuthenticationGateway } from './gateway';
-import {
-    AuthenticationContext,
-    AuthenticationEvent,
-    AuthenticationStateSchema,
-    createMachine,
-} from './machine';
+import { FortressGateway } from './gateway';
+import { createMachine, FortressContext, FortressEvent, FortressStateSchema } from './machine';
 
-export class AuthenticationService extends ObservableService<
-    AuthenticationContext,
-    AuthenticationEvent,
-    AuthenticationStateSchema
+export class FortressService extends ObservableService<
+    FortressContext,
+    FortressEvent,
+    FortressStateSchema
 > {
     constructor(proxy: Proxy) {
-        super(createMachine(new AuthenticationGateway(proxy, () => this)));
+        super(createMachine(new FortressGateway(proxy, () => this)));
     }
 
     public authenticate() {
