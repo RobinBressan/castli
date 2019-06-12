@@ -1,4 +1,4 @@
-import { Fortress } from '../fortress';
+import { Fortress } from '../../';
 import { createTestProxy } from './testProxy';
 import { createSubscriberAuthenticationEvent } from './tools';
 

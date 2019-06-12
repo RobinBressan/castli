@@ -10,6 +10,7 @@
         "react": "16.8.6"
     },
     "dependencies": {
-        "castli-core": "^1.0.0"
+        "castli-core": "^1.0.0",
+        "react-testing-library": "8.0.1"
     }
 }

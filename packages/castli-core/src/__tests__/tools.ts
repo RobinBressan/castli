@@ -1,6 +1,13 @@
-import { AuthenticationEvent, AuthenticationStateValues } from '../authentication/machine';
-import { AuthorizationEvent, AuthorizationStateValues } from '../authorization/machine';
-import { Challenge, Event, Permission, User } from '../types';
+import {
+    AuthenticationEvent,
+    AuthenticationStateValues,
+    AuthorizationEvent,
+    AuthorizationStateValues,
+    Challenge,
+    Event,
+    Permission,
+    User,
+} from '../../';
 
 export function createSubscriberAuthenticationEvent(
     challenges: Challenge[],

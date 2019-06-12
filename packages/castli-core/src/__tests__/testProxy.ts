@@ -1,5 +1,5 @@
 import { flatten, get } from 'lodash';
-import { Proxy } from '../types';
+import { Proxy } from '../../';
 
 type Response = Record<string, any> | Error;
 

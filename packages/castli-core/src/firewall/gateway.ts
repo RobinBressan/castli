@@ -1,28 +1,28 @@
 import { AuthorizationService } from './service';
 
-import { AuthenticationService } from '../authentication/service';
 import { Gateway } from '../core/gateway';
-import { Guard, Proxy } from '../types';
+import { Guard, Proxy } from '../core/types';
+import { Fortress } from '../fortress';
 import { AuthorizationContext, AuthorizationEvent } from './machine';
 
 export class AuthorizationGateway extends Gateway<AuthorizationService> {
-    private authenticationService: AuthenticationService;
+    private fortress: Fortress;
     private guard: Guard;
 
     constructor(
         proxy: Proxy,
         guard: Guard,
         deferredAuthorizationService: () => AuthorizationService,
-        authenticationService: AuthenticationService,
+        fortress: Fortress,
     ) {
         super(proxy, deferredAuthorizationService);
 
-        this.authenticationService = authenticationService;
+        this.fortress = fortress;
         this.guard = guard;
     }
 
     private get challenges() {
-        return this.authenticationService.state.context.challenges;
+        return this.fortress.state.context.challenges;
     }
 
     public async provision(context: AuthorizationContext, event: AuthorizationEvent) {

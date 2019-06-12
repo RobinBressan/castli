@@ -1,21 +1,33 @@
 import { cloneDeep } from 'lodash';
 import { fromEventPattern, interval, Observable, Subject } from 'rxjs';
 import { delayWhen, filter, first, map, shareReplay, takeWhile } from 'rxjs/operators';
-import { EventObject, interpret, Interpreter, State, StateMachine, StateSchema } from 'xstate';
+import {
+    EventObject,
+    interpret,
+    Interpreter,
+    State,
+    StateMachine,
+    StateSchema as BaseStateSchema,
+} from 'xstate';
 
+/**
+ * An ObservableService is an observable wrapper around a state machine service.
+ * It handle the initialization of the service, and handle the dispatch of event in it.
+ */
 export class ObservableService<
-    TContext = Record<string, any>,
-    TStateSchema extends StateSchema = any,
-    TEvent extends EventObject = any
+    Context = Record<string, any>,
+    StateSchema extends BaseStateSchema = any,
+    Event extends EventObject = any,
+    StateValue = any
 > {
-    public readonly state$: Observable<[State<TContext, TEvent>, TEvent]>;
-    public readonly pipe: Observable<[State<TContext, TEvent>, TEvent]>['pipe'];
-    public readonly subscribe: Observable<[State<TContext, TEvent>, TEvent]>['subscribe'];
+    public readonly state$: Observable<[State<Context, Event>, Event]>;
+    public readonly pipe: Observable<[State<Context, Event>, Event]>['pipe'];
+    public readonly subscribe: Observable<[State<Context, Event>, Event]>['subscribe'];
 
-    private service: Interpreter<TContext, TStateSchema, TEvent>;
-    private event$ = new Subject<TEvent | TEvent['type']>();
+    private service: Interpreter<Context, StateSchema, Event>;
+    private event$ = new Subject<Event | Event['type']>();
 
-    constructor(machine: StateMachine<TContext, TStateSchema, TEvent>) {
+    constructor(machine: StateMachine<Context, StateSchema, Event>) {
         this.service = interpret(machine);
         this.state$ = fromEventPattern(
             handler => {
@@ -24,13 +36,16 @@ export class ObservableService<
             },
             (_, service) => service.stop(),
         ).pipe(
-            shareReplay<[State<TContext, TEvent>, TEvent]>(1),
+            // we want to store the last emission, to ensure its new subscriber get notified with it
+            // this way, late subscribers don't get out of sync
+            shareReplay<[State<Context, Event>, Event]>(1),
             map(value => cloneDeep(value)),
         );
 
         this.pipe = this.state$.pipe.bind(this.state$);
         this.subscribe = this.state$.subscribe.bind(this.state$);
 
+        // we poll the service to get a complete observable once initialized
         const serviceInitialized$ = interval(1).pipe(
             filter(() => this.service.initialized),
             first(),
@@ -45,16 +60,16 @@ export class ObservableService<
         return this.service.state;
     }
 
-    public sendEvent(event: TEvent | TEvent['type']) {
+    public sendEvent(event: Event | Event['type']) {
         this.event$.next(event);
     }
 
-    public waitFor(stateValue: keyof TStateSchema['states']) {
+    public waitFor(stateValue: StateValue) {
         return this.state$
             .pipe(
                 takeWhile(value => {
                     const [state] = value;
-                    return state.value !== stateValue;
+                    return (state.value as any) !== stateValue;
                 }),
             )
             .toPromise();

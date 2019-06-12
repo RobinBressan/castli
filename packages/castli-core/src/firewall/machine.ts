@@ -1,6 +1,6 @@
 import { Machine, State as BaseState } from 'xstate';
 
-import { Event, Permission, User } from '../types';
+import { Event, Permission, User } from '../core/types';
 import { AuthorizationGateway } from './gateway';
 
 export type AuthorizationEvent =
@@ -10,7 +10,7 @@ export type AuthorizationEvent =
     | Event<'GRANT'>
     | Event<'PROVISION'>
     | Event<'DEAUTHENTICATE'>;
-export type AuthorizationStateValues =
+export type AuthorizationStateValue =
     | 'authorizing'
     | 'denied'
     | 'granted'
@@ -18,7 +18,7 @@ export type AuthorizationStateValues =
     | 'provisioning'
     | 'unauthenticated';
 export interface AuthorizationStateSchema {
-    states: Record<AuthorizationStateValues, {}>;
+    states: Record<AuthorizationStateValue, {}>;
 }
 
 export interface AuthorizationContext {

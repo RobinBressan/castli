@@ -1,9 +1,9 @@
-import { AuthorizationContext, AuthorizationStateValues } from 'castli-core';
+import { AuthorizationContext, AuthorizationStateValue } from 'castli-core';
 
 import { useFirewall } from '../hook/useFirewall';
 import { createFactory, ProviderProps } from './factory';
 
-const factory = createFactory<AuthorizationStateValues, AuthorizationContext>(
+const factory = createFactory<AuthorizationStateValue, AuthorizationContext>(
     {
         permissions: null,
         user: null,
@@ -26,7 +26,7 @@ const Idle = factory.createStateValueConsumer('idle');
 const Provisioning = factory.createStateValueConsumer('provisioning');
 const Unauthenticated = factory.createStateValueConsumer('unauthenticated');
 
-export type FirewallProps = ProviderProps<AuthorizationStateValues, AuthorizationContext>;
+export type FirewallProps = ProviderProps<AuthorizationStateValue, AuthorizationContext>;
 export const Firewall = Object.assign(
     {
         Authorizing,

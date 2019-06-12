@@ -1,25 +1,23 @@
-import { AuthenticationService } from '../authentication/service';
 import { ObservableService } from '../core/observable-service';
-import { Guard, Proxy } from '../types';
+import { Guard, Proxy } from '../core/types';
+import { Fortress } from '../fortress';
 import { AuthorizationGateway } from './gateway';
 import {
     AuthorizationContext,
     AuthorizationEvent,
     AuthorizationStateSchema,
+    AuthorizationStateValue,
     createMachine,
 } from './machine';
 
 export class AuthorizationService extends ObservableService<
     AuthorizationContext,
     AuthorizationStateSchema,
-    AuthorizationEvent
+    AuthorizationEvent,
+    AuthorizationStateValue
 > {
-    constructor(proxy: Proxy, guard: Guard, authenticationService: AuthenticationService) {
-        super(
-            createMachine(
-                new AuthorizationGateway(proxy, guard, () => this, authenticationService),
-            ),
-        );
+    constructor(proxy: Proxy, guard: Guard, fortress: Fortress) {
+        super(createMachine(new AuthorizationGateway(proxy, guard, () => this, fortress)));
     }
 
     public authorize(query?: Record<string, any>) {

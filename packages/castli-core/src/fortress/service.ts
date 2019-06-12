@@ -1,5 +1,5 @@
 import { ObservableService } from '../core/observable-service';
-import { Proxy } from '../types';
+import { Proxy } from '../core/types';
 import { AuthenticationGateway } from './gateway';
 import {
     AuthenticationContext,

@@ -1,6 +1,6 @@
 import { Machine, State as BaseState } from 'xstate';
 
-import { Event } from '../types';
+import { Event } from '../core/types';
 import { AuthenticationGateway } from './gateway';
 
 export type AuthenticationEvent =
@@ -8,13 +8,9 @@ export type AuthenticationEvent =
     | Event<'CHALLENGE'>
     | Event<'DEAUTHENTICATE'>
     | Event<'RECHALLENGE'>;
-export type AuthenticationStateValues =
-    | 'authenticated'
-    | 'challenging'
-    | 'idle'
-    | 'unauthenticated';
+export type AuthenticationStateValue = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
 export interface AuthenticationStateSchema {
-    states: Record<AuthenticationStateValues, {}>;
+    states: Record<AuthenticationStateValue, {}>;
 }
 
 export interface AuthenticationContext {
