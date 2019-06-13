@@ -1,3 +1,4 @@
+import { SchedulerLike } from 'rxjs';
 import { ObservableService } from '../core/observable-service';
 import { Guard, Proxy } from '../core/types';
 import { Fortress } from '../fortress';
@@ -9,8 +10,8 @@ export class FirewallService extends ObservableService<
     FirewallEvent,
     FirewallStateSchema
 > {
-    constructor(proxy: Proxy, guard: Guard, fortress: Fortress) {
-        super(createMachine(new FirewallGateway(proxy, guard, () => this, fortress)));
+    constructor(proxy: Proxy, guard: Guard, fortress: Fortress, scheduler?: SchedulerLike) {
+        super(createMachine(new FirewallGateway(proxy, guard, () => this, fortress)), scheduler);
     }
 
     public authorize(query?: Record<string, any>) {

@@ -1,4 +1,4 @@
-import { Subscription } from 'rxjs';
+import { SchedulerLike, Subscription } from 'rxjs';
 
 import { Facade } from '../core/facade';
 import { Guard, Proxy } from '../core/types';
@@ -11,8 +11,14 @@ export class Firewall extends Facade<FirewallService> {
     private fortress: Fortress;
     private fortressSubscription: Subscription;
 
-    constructor(proxy: Proxy, guard: Guard, query: Record<string, any>, fortress: Fortress) {
-        super(new FirewallService(proxy, guard, fortress));
+    constructor(
+        proxy: Proxy,
+        guard: Guard,
+        query: Record<string, any>,
+        fortress: Fortress,
+        scheduler?: SchedulerLike,
+    ) {
+        super(new FirewallService(proxy, guard, fortress, scheduler));
 
         this.fortress = fortress;
         this.query = query;

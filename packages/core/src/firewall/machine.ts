@@ -79,10 +79,10 @@ export function createMachine(gateway: FirewallGateway) {
         {
             actions: {
                 async beginProvisioning(context, event) {
-                    gateway.provision(context, event);
+                    await gateway.provision(context, event);
                 },
                 async beginAuthorizing(context, event) {
-                    gateway.authorize(context, event);
+                    await gateway.authorize(context, event);
                 },
             },
         },

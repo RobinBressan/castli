@@ -1,3 +1,4 @@
+import { SchedulerLike } from 'rxjs';
 import { ObservableService } from '../core/observable-service';
 import { Proxy } from '../core/types';
 import { FortressGateway } from './gateway';
@@ -8,8 +9,8 @@ export class FortressService extends ObservableService<
     FortressEvent,
     FortressStateSchema
 > {
-    constructor(proxy: Proxy) {
-        super(createMachine(new FortressGateway(proxy, () => this)));
+    constructor(proxy: Proxy, scheduler?: SchedulerLike) {
+        super(createMachine(new FortressGateway(proxy, () => this)), scheduler);
     }
 
     public authenticate() {

@@ -29,9 +29,7 @@ function render(
 }
 
 describe('<Fortress />', () => {
-    beforeEach(jest.useFakeTimers);
     afterEach(rtl.cleanup);
-    afterEach(jest.useRealTimers);
 
     it('should correctly render when desauthenticate() is called', async () => {
         expect.assertions(9);
@@ -57,7 +55,6 @@ describe('<Fortress />', () => {
         const fortress = onReady.mock.calls[0][0] as FortressClass;
         rtl.act(() => {
             fortress.deauthenticate();
-            jest.runAllTimers();
         });
 
         await rtl.wait(() => getByStateValue('unauthenticated'));
@@ -93,7 +90,6 @@ describe('<Fortress />', () => {
         const fortress = onReady.mock.calls[0][0] as FortressClass;
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
-            jest.runAllTimers();
         });
 
         await rtl.wait(() => {
@@ -104,10 +100,6 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('idle')).toThrowError();
         expect(() => getByStateValue('authenticated')).toThrowError();
         expect(() => getByStateValue('unauthenticated')).toThrowError();
-
-        rtl.act(() => {
-            jest.runAllTimers();
-        });
 
         await rtl.wait(() => getByStateValue('authenticated'));
 
@@ -128,7 +120,6 @@ describe('<Fortress />', () => {
 
         rtl.act(() => {
             fortress.deauthenticate();
-            jest.runAllTimers();
         });
 
         await rtl.wait(() => getByStateValue('unauthenticated'));
@@ -143,9 +134,9 @@ describe('<Fortress />', () => {
         expect.assertions(11);
 
         const proxy = createTestProxy({
-            challenge: new Promise((_, reject) =>
+            challenge: new Promise(resolve =>
                 setTimeout(
-                    () => reject(new Error('Bad credentials')),
+                    () => resolve(new Error('Bad credentials')),
                     10, // we introduce a little delay to simulate network latency
                 ),
             ),
@@ -161,7 +152,6 @@ describe('<Fortress />', () => {
         const fortress = onReady.mock.calls[0][0] as FortressClass;
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
-            jest.runAllTimers();
         });
 
         await rtl.wait(() => {
@@ -172,10 +162,6 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('idle')).toThrowError();
         expect(() => getByStateValue('authenticated')).toThrowError();
         expect(() => getByStateValue('unauthenticated')).toThrowError();
-
-        rtl.act(() => {
-            jest.runAllTimers();
-        });
 
         await rtl.wait(() => getByStateValue('unauthenticated'));
 

@@ -1,3 +1,4 @@
+import { SchedulerLike } from 'rxjs';
 import { Facade } from '../core/facade';
 import { Guard, Proxy } from '../core/types';
 import { Firewall } from '../firewall';
@@ -14,8 +15,8 @@ export class Fortress extends Facade<FortressService> {
     private guard: Guard;
     private proxy: Proxy;
 
-    constructor(proxy: Proxy, guard: Guard) {
-        super(new FortressService(proxy));
+    constructor(proxy: Proxy, guard: Guard, scheduler?: SchedulerLike) {
+        super(new FortressService(proxy, scheduler));
 
         this.guard = guard;
         this.proxy = proxy;
@@ -24,7 +25,7 @@ export class Fortress extends Facade<FortressService> {
         this.deauthenticate = this.service.deauthenticate.bind(this.service);
     }
 
-    public createFirewall(query: Record<string, any> = null) {
-        return new Firewall(this.proxy, this.guard, query, this);
+    public createFirewall(query: Record<string, any> = null, scheduler?: SchedulerLike) {
+        return new Firewall(this.proxy, this.guard, query, this, scheduler);
     }
 }

@@ -6,6 +6,7 @@ import {
     Proxy,
 } from '@castli/core';
 import * as React from 'react';
+import { animationFrameScheduler } from 'rxjs';
 
 import { context } from './context';
 
@@ -17,7 +18,10 @@ export interface FortressProps {
 }
 
 export const Fortress: React.SFC<FortressProps> = ({ children, guard, onReady, proxy }) => {
-    const fortress = React.useMemo(() => new FortressClass(proxy, guard), [guard, proxy]);
+    const fortress = React.useMemo(() => new FortressClass(proxy, guard, animationFrameScheduler), [
+        guard,
+        proxy,
+    ]);
     const [fortressStateValue, setFortressStateValue] = React.useState<FortressStateValue>('idle');
     const [fortressContext, setFortressContext] = React.useState<FortressContext>({
         challenges: [],

@@ -1,6 +1,13 @@
 import { cloneDeep } from 'lodash';
-import { fromEventPattern, interval, Observable, Subject } from 'rxjs';
-import { delayWhen, filter, first, map, shareReplay, takeWhile } from 'rxjs/operators';
+import {
+    fromEventPattern,
+    interval,
+    Observable,
+    queueScheduler,
+    SchedulerLike,
+    Subject,
+} from 'rxjs';
+import { delayWhen, filter, first, map, observeOn, shareReplay, takeWhile } from 'rxjs/operators';
 import {
     EventObject,
     interpret,
@@ -26,8 +33,12 @@ export abstract class ObservableService<
     private service: Interpreter<Context, StateSchema, Event>;
     private event$ = new Subject<Event | Event['type']>();
 
-    constructor(machine: StateMachine<Context, StateSchema, Event>) {
+    constructor(
+        machine: StateMachine<Context, StateSchema, Event>,
+        scheduler: SchedulerLike = queueScheduler,
+    ) {
         this.service = interpret(machine);
+
         this.state$ = fromEventPattern(
             handler => {
                 this.service.onTransition(handler).start();
@@ -35,6 +46,7 @@ export abstract class ObservableService<
             },
             (_, service) => service.stop(),
         ).pipe(
+            observeOn(scheduler),
             // we want to store the last emission, to ensure its new subscriber get notified with it
             // this way, late subscribers don't get out of sync
             shareReplay<[State<Context, Event>, Event]>(1),
@@ -45,14 +57,19 @@ export abstract class ObservableService<
         this.subscribe = this.state$.subscribe.bind(this.state$);
 
         // we poll the service to get a complete observable once initialized
-        const serviceInitialized$ = interval(1).pipe(
+        const serviceInitialized$ = interval(1, scheduler).pipe(
             filter(() => this.service.initialized),
             first(),
         );
 
         this.event$
-            .pipe(delayWhen(() => serviceInitialized$))
-            .subscribe(event => this.service.send(event));
+            .pipe(
+                observeOn(scheduler),
+                delayWhen(() => serviceInitialized$),
+            )
+            .subscribe(event => {
+                this.service.send(event);
+            });
     }
 
     get state() {

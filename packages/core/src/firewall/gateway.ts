@@ -40,6 +40,7 @@ export class FirewallGateway extends Gateway<FirewallService> {
 
     public async authorize(context: FirewallContext, event: FirewallEvent) {
         const { user, permissions } = context;
+
         try {
             if (await this.guard(event.query, user, permissions, this.challenges)) {
                 this.service.grant();

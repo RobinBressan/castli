@@ -5,6 +5,9 @@
     "author": "Robin Bressan",
     "license": "MIT",
     "private": true,
+    "dependencies": {
+        "rxjs": "6.5.2"
+    },
     "devDependencies": {
         "@types/jest": "24.0.13",
         "@types/node": "12.0.5",
