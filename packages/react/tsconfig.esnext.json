@@ -1,8 +1,0 @@
-{
-    "extends": "./tsconfig.json",
-    "files": ["index.ts"],
-    "compilerOptions": {
-        "module": "esnext",
-        "target": "es6"
-    }
-}
