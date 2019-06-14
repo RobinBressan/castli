@@ -3,11 +3,23 @@
     "version": "1.0.0",
     "description": "React connector for castli",
     "author": "RobinBressan",
-    "main": "index.js",
+    "main": "lib/index.js",
+    "module": "es/index.js",
     "license": "MIT",
     "scripts": {
+        "clean-esnext": "rm -rf es",
+        "clean-es5": "rm -rf lib",
+        "clean-all": "yarn clean-esnext && yarn clean-es5",
+        "build-esnext": "tsc --declaration --outDir es --project tsconfig.esnext.json",
+        "build-es5": "tsc --declaration --outDir lib --project tsconfig.es5.json",
+        "build-all": "yarn build-esnext && yarn build-es5",
+        "build": "yarn clean-all && yarn build-all",
         "test": "jest"
     },
+    "files": [
+        "es/**/*",
+        "lib/**/*"
+    ],
     "devDependencies": {
         "@castli/test-utils": "^1.0.0",
         "@testing-library/react": "8.0.1",

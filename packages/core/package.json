@@ -1,12 +1,24 @@
 {
     "name": "@castli/core",
     "version": "1.0.0",
-    "main": "index.js",
+    "main": "lib/index.js",
+    "module": "es/index.js",
     "author": "RobinBressan",
     "license": "MIT",
     "scripts": {
+        "clean-esnext": "rm -rf es",
+        "clean-es5": "rm -rf lib",
+        "clean-all": "yarn clean-esnext && yarn clean-es5",
+        "build-esnext": "tsc --declaration --outDir es --project tsconfig.esnext.json",
+        "build-es5": "tsc --declaration --outDir lib --project tsconfig.es5.json",
+        "build-all": "yarn build-esnext && yarn build-es5",
+        "build": "yarn clean-all && yarn build-all",
         "test": "jest"
     },
+    "files": [
+        "es/**/*",
+        "lib/**/*"
+    ],
     "dependencies": {
         "lodash": "4.17.11",
         "xstate": "4.6.0"

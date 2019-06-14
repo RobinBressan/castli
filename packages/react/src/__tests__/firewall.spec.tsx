@@ -3,7 +3,7 @@ import { createTestProxy } from '@castli/test-utils';
 import * as rtl from '@testing-library/react';
 import * as React from 'react';
 
-import { Firewall, FirewallState, Fortress, FortressProps } from '../';
+import { Firewall, FirewallState, Fortress, FortressProps } from '../../';
 
 function render(
     proxy: FortressProps['proxy'],
