@@ -65,8 +65,8 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('challenging')).toThrowError();
     });
 
-    it('should correctly render when challening() is called and the operation succeeds', async () => {
-        expect.assertions(15);
+    it('should correctly render when challenging() is called and the operation succeeds', async () => {
+        expect.assertions(11);
 
         const proxy = createTestProxy({
             challenge: new Promise(resolve =>
@@ -91,15 +91,6 @@ describe('<Fortress />', () => {
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
         });
-
-        await rtl.wait(() => {
-            getByStateValue('challenging');
-        });
-
-        expect(getByStateValue('challenging')).toBeInTheDocument();
-        expect(() => getByStateValue('idle')).toThrowError();
-        expect(() => getByStateValue('authenticated')).toThrowError();
-        expect(() => getByStateValue('unauthenticated')).toThrowError();
 
         await rtl.wait(() => getByStateValue('authenticated'));
 
@@ -130,8 +121,8 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('challenging')).toThrowError();
     });
 
-    it('should correctly render when challening() is called and the operation fails', async () => {
-        expect.assertions(11);
+    it('should correctly render when challenging() is called and the operation fails', async () => {
+        expect.assertions(7);
 
         const proxy = createTestProxy({
             challenge: new Promise(resolve =>
@@ -153,15 +144,6 @@ describe('<Fortress />', () => {
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
         });
-
-        await rtl.wait(() => {
-            getByStateValue('challenging');
-        });
-
-        expect(getByStateValue('challenging')).toBeInTheDocument();
-        expect(() => getByStateValue('idle')).toThrowError();
-        expect(() => getByStateValue('authenticated')).toThrowError();
-        expect(() => getByStateValue('unauthenticated')).toThrowError();
 
         await rtl.wait(() => getByStateValue('unauthenticated'));
 

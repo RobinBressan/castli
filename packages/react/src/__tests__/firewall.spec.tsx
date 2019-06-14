@@ -101,20 +101,34 @@ describe('<Firewall />', () => {
         expect(() => getByStateValue('idle')).toThrowError();
     });
 
-    it('should start provisioning and then correctly render when the fortress transition to authenticated', async () => {
-        expect.assertions(12);
+    it('should start provisioning, transition to granted and then correctly render when the fortress transition to authenticated and guard returns true', async () => {
+        expect.assertions(16);
 
         const proxy = createTestProxy({
-            challenge: {
-                token: 'abc123',
-            },
-            provision: {
-                permissions: ['write'],
-                user: { name: 'Bob', role: 'ADMIN' },
-            },
+            challenge: new Promise(resolve =>
+                setTimeout(
+                    () =>
+                        resolve({
+                            token: 'abc123',
+                        }),
+                    500,
+                ),
+            ),
+            provision: new Promise(resolve =>
+                setTimeout(
+                    () =>
+                        resolve({
+                            permissions: ['write'],
+                            user: { name: 'Bob', role: 'ADMIN' },
+                        }),
+                    500,
+                ),
+            ),
         });
 
-        const guard = jest.fn().mockReturnValue(true);
+        const guard = jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(true), 100)));
         const onReady = jest.fn();
 
         const { getByStateValue } = render(proxy, guard, onReady);
@@ -127,11 +141,72 @@ describe('<Firewall />', () => {
         expect(() => getByStateValue('unauthenticated')).toThrowError();
 
         const fortress = onReady.mock.calls[0][0] as FortressClass;
+
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
         });
 
-        await rtl.wait(() => getByStateValue('idle'));
+        await rtl.wait(() => getByStateValue('granted'));
+        expect(getByStateValue('granted')).toBeInTheDocument();
+        expect(() => getByStateValue('authorizing')).toThrowError();
+        expect(() => getByStateValue('denied')).toThrowError();
+        expect(() => getByStateValue('idle')).toThrowError();
+        expect(() => getByStateValue('provisioning')).toThrowError();
+        expect(() => getByStateValue('unauthenticated')).toThrowError();
+
+        expect(proxy.provision).toHaveBeenCalledTimes(1);
+        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [
+            {
+                token: 'abc123',
+            },
+        ]);
+
+        expect(guard).toHaveBeenCalledTimes(1);
+        expect(guard).toHaveBeenCalledWith(
+            { role: 'ADMIN' },
+            { name: 'Bob', role: 'ADMIN' },
+            ['write'],
+            [
+                {
+                    token: 'abc123',
+                },
+            ],
+        );
+    });
+
+    it('should start provisioning, transition to denied and then correctly render when the fortress transition to authenticated and guard returns false', async () => {
+        expect.assertions(16);
+
+        const proxy = createTestProxy({
+            challenge: new Promise(resolve =>
+                setTimeout(
+                    () =>
+                        resolve({
+                            token: 'abc123',
+                        }),
+                    500,
+                ),
+            ),
+            provision: new Promise(resolve =>
+                setTimeout(
+                    () =>
+                        resolve({
+                            permissions: ['write'],
+                            user: { name: 'Bob', role: 'ADMIN' },
+                        }),
+                    500,
+                ),
+            ),
+        });
+
+        const guard = jest
+            .fn()
+            .mockImplementation(
+                () => new Promise(resolve => setTimeout(() => resolve(false), 100)),
+            );
+        const onReady = jest.fn();
+
+        const { getByStateValue } = render(proxy, guard, onReady);
 
         expect(getByStateValue('idle')).toBeInTheDocument();
         expect(() => getByStateValue('authorizing')).toThrowError();
@@ -140,6 +215,37 @@ describe('<Firewall />', () => {
         expect(() => getByStateValue('provisioning')).toThrowError();
         expect(() => getByStateValue('unauthenticated')).toThrowError();
 
-        await rtl.wait(() => getByStateValue('granted'));
+        const fortress = onReady.mock.calls[0][0] as FortressClass;
+
+        rtl.act(() => {
+            fortress.challenge({ email: 'bob@localhost', password: 'password' });
+        });
+
+        await rtl.wait(() => getByStateValue('denied'));
+        expect(getByStateValue('denied')).toBeInTheDocument();
+        expect(() => getByStateValue('authorizing')).toThrowError();
+        expect(() => getByStateValue('granted')).toThrowError();
+        expect(() => getByStateValue('idle')).toThrowError();
+        expect(() => getByStateValue('provisioning')).toThrowError();
+        expect(() => getByStateValue('unauthenticated')).toThrowError();
+
+        expect(proxy.provision).toHaveBeenCalledTimes(1);
+        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [
+            {
+                token: 'abc123',
+            },
+        ]);
+
+        expect(guard).toHaveBeenCalledTimes(1);
+        expect(guard).toHaveBeenCalledWith(
+            { role: 'ADMIN' },
+            { name: 'Bob', role: 'ADMIN' },
+            ['write'],
+            [
+                {
+                    token: 'abc123',
+                },
+            ],
+        );
     });
 });
