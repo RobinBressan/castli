@@ -1,27 +1,32 @@
-import { cloneDeep } from 'lodash';
-
-import { FortressContext, FortressEvent } from './machine';
+import { FortressEvent } from './machine';
 import { FortressService } from './service';
 
 import { Gateway } from '../core/gateway';
+import { Strategy } from './strategy';
 
-export class FortressGateway extends Gateway<FortressService> {
-    public async challenge(context: FortressContext, event: FortressEvent) {
-        // depending on the proxy auth flow, we might need to perform several challenge requests
-        // to achieve this, we provide to the proxy a lambda which will tamper with the next event to be dispachted in the service
-        let nextEvent: FortressEvent['type'] = 'AUTHENTICATE';
-        const rechallenge = () => (nextEvent = 'RECHALLENGE');
+export class FortressGateway<FortressContext> extends Gateway<FortressService<FortressContext>> {
+    private strategy: Strategy;
+    private injected = false;
 
-        try {
-            const response = await this.proxy.challenge(
-                event.query,
-                cloneDeep(context.challenges),
-                rechallenge,
-            );
-            context.challenges.push(response);
-            this.service.sendEvent(nextEvent);
-        } catch (error) {
-            this.service.deauthenticate({ error });
+    constructor(
+        strategy: Strategy<any, FortressContext>,
+        deferredService: () => FortressService<FortressContext>,
+    ) {
+        super(deferredService);
+        this.strategy = strategy;
+    }
+
+    public async challenge(_, event: FortressEvent) {
+        this.inject();
+        this.strategy.start(event.query);
+    }
+
+    private inject() {
+        if (this.injected) {
+            return;
         }
+
+        this.strategy.injectFortressService(this.service);
+        this.injected = true;
     }
 }

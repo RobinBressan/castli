@@ -1,7 +1,9 @@
-import { FirewallContext, FirewallStateValue } from '@castli/core';
+import { FirewallStateValue } from '@castli/core';
 import * as React from 'react';
 
-export interface FirewallReactContext {
+export interface FirewallReactContext<
+    FirewallContext extends Record<string, any> = Record<string, any>
+> {
     context: FirewallContext;
     stateValue: FirewallStateValue;
 }

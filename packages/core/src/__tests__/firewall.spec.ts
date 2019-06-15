@@ -1,26 +1,28 @@
 import { createTestProxy } from '@castli/test-utils';
 
-import { Fortress } from '../../';
+import { BasicAuthStrategy, Fortress } from '../../';
 import { createFirewallEventSubscriber } from './subscribers';
+
+interface BasicAuthQuery {
+    email: string;
+    password: string;
+}
+interface BasicAuthResponse {
+    token: string;
+}
 
 describe('Firewall', () => {
     it('idle => unauthenticated', async () => {
-        expect.assertions(8);
+        expect.assertions(7);
 
         const proxy = createTestProxy({
-            challenge: {
-                token: 'abc123',
-            },
-            provision: {
-                permissions: [{ role: 'resource.write' }],
-                user: { name: 'Bob' },
-            },
+            token: 'abc123',
         });
 
-        const guard = jest.fn().mockReturnValue(true);
-        const fortress = new Fortress(proxy, guard);
+        const guard = jest.fn().mockReturnValue({ name: 'Bob' });
+        const strategy = new BasicAuthStrategy<BasicAuthQuery, BasicAuthResponse>(proxy);
+        const fortress = new Fortress(strategy, guard);
         const firewall = fortress.createFirewall({ role: 'ADMIN' });
-
         expect(fortress.state.value).toBe('idle');
         expect(firewall.state.value).toBe('idle');
 
@@ -34,12 +36,12 @@ describe('Firewall', () => {
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createFirewallEventSubscriber(null, null, 'idle', {
+                createFirewallEventSubscriber({}, 'idle', {
                     type: 'xstate.init',
                 }),
             ],
             [
-                createFirewallEventSubscriber(null, null, 'unauthenticated', {
+                createFirewallEventSubscriber({}, 'unauthenticated', {
                     type: 'DEAUTHENTICATE',
                 }),
             ],
@@ -47,27 +49,22 @@ describe('Firewall', () => {
         expect(firewall.state.value).toBe('unauthenticated');
 
         expect(guard).not.toHaveBeenCalled();
-        expect(proxy.challenge).not.toHaveBeenCalled();
-        expect(proxy.provision).not.toHaveBeenCalled();
+        expect(proxy.request).not.toHaveBeenCalled();
 
         firewall.dispose();
     });
 
-    it('idle => provisioning => authorizing => granted', async () => {
-        expect.assertions(11);
+    it('idle => authorizing => granted', async () => {
+        expect.assertions(10);
 
         const proxy = createTestProxy({
-            challenge: {
-                token: 'abc123',
-            },
-            provision: {
-                permissions: [{ role: 'resource.write' }],
-                user: { name: 'Bob' },
-            },
+            token: 'abc123',
         });
 
-        const guard = jest.fn().mockReturnValue(true);
-        const fortress = new Fortress(proxy, guard);
+        const guard = jest.fn().mockReturnValue({ name: 'Bob' });
+
+        const strategy = new BasicAuthStrategy(proxy);
+        const fortress = new Fortress(strategy, guard);
         const firewall = fortress.createFirewall({ role: 'ADMIN' });
 
         expect(fortress.state.value).toBe('idle');
@@ -80,90 +77,62 @@ describe('Firewall', () => {
 
         await firewall.waitFor('granted');
 
-        expect(subscriber).toHaveBeenCalledTimes(5);
+        expect(subscriber).toHaveBeenCalledTimes(4);
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createFirewallEventSubscriber(null, null, 'idle', {
+                createFirewallEventSubscriber({}, 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createFirewallEventSubscriber(null, null, 'idle', {
+                createFirewallEventSubscriber({}, 'idle', {
                     type: 'RESET', // this is due to the challenging state in the authentication machine
                 }),
             ],
-
             [
-                createFirewallEventSubscriber(null, null, 'provisioning', {
-                    type: 'PROVISION',
+                createFirewallEventSubscriber({}, 'authorizing', {
+                    type: 'AUTHORIZE',
                 }),
             ],
             [
-                createFirewallEventSubscriber(
-                    { name: 'Bob' },
-                    [{ role: 'resource.write' }],
-                    'authorizing',
-                    {
-                        type: 'AUTHORIZE',
-                    },
-                ),
-            ],
-            [
-                createFirewallEventSubscriber(
-                    { name: 'Bob' },
-                    [{ role: 'resource.write' }],
-                    'granted',
-                    {
-                        type: 'GRANT',
-                    },
-                ),
+                createFirewallEventSubscriber({ name: 'Bob' }, 'granted', {
+                    type: 'GRANT',
+                }),
             ],
         ]);
         expect(firewall.state.value).toBe('granted');
+        expect(firewall.state.context).toEqual({ name: 'Bob' });
 
         expect(guard).toHaveBeenCalledTimes(1);
         expect(guard).toHaveBeenCalledWith(
             { role: 'ADMIN' },
-            { name: 'Bob' },
-            [{ role: 'resource.write' }],
-            [
-                {
-                    token: 'abc123',
-                },
-            ],
-        );
-        expect(proxy.challenge).toHaveBeenCalledTimes(1);
-        expect(proxy.challenge).toHaveBeenCalledWith(
             {
-                email: 'bob@localhost',
-                password: 'password',
+                token: 'abc123',
             },
-            [],
-            expect.any(Function),
         );
-        expect(proxy.provision).toHaveBeenCalledTimes(1);
-        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [{ token: 'abc123' }]);
+        expect(proxy.request).toHaveBeenCalledTimes(1);
+        expect(proxy.request).toHaveBeenCalledWith({
+            email: 'bob@localhost',
+            password: 'password',
+        });
 
         firewall.dispose();
     });
 
-    it('idle => provisioning => authorizing => denied', async () => {
+    it('idle => authorizing => denied', async () => {
         expect.assertions(10);
 
         const proxy = createTestProxy({
-            challenge: {
-                token: 'abc123',
-            },
-            provision: {
-                permissions: [{ role: 'resource.write' }],
-                user: { name: 'Bob' },
-            },
+            token: 'abc123',
         });
 
-        const guard = jest.fn().mockRejectedValue(new Error('Denied'));
-        const fortress = new Fortress(proxy, guard);
+        const guard = jest.fn().mockImplementation(() => Promise.reject(new Error('Denied')));
+
+        const strategy = new BasicAuthStrategy(proxy);
+        const fortress = new Fortress(strategy, guard);
         const firewall = fortress.createFirewall({ role: 'ADMIN' });
 
+        expect(fortress.state.value).toBe('idle');
         expect(fortress.state.value).toBe('idle');
 
         fortress.challenge({ email: 'bob@localhost', password: 'password' });
@@ -173,69 +142,44 @@ describe('Firewall', () => {
 
         await firewall.waitFor('denied');
 
-        expect(subscriber).toHaveBeenCalledTimes(5);
+        expect(subscriber).toHaveBeenCalledTimes(4);
         expect(subscriber.mock.calls).toMatchObject([
             [
-                createFirewallEventSubscriber(null, null, 'idle', {
+                createFirewallEventSubscriber({}, 'idle', {
                     type: 'xstate.init', // this is the init from xstate
                 }),
             ],
             [
-                createFirewallEventSubscriber(null, null, 'idle', {
+                createFirewallEventSubscriber({}, 'idle', {
                     type: 'RESET', // this is due to the challenging state in the authentication machine
                 }),
             ],
-
             [
-                createFirewallEventSubscriber(null, null, 'provisioning', {
-                    type: 'PROVISION',
+                createFirewallEventSubscriber({}, 'authorizing', {
+                    type: 'AUTHORIZE',
                 }),
             ],
             [
-                createFirewallEventSubscriber(
-                    { name: 'Bob' },
-                    [{ role: 'resource.write' }],
-                    'authorizing',
-                    {
-                        type: 'AUTHORIZE',
-                    },
-                ),
-            ],
-            [
-                createFirewallEventSubscriber(
-                    { name: 'Bob' },
-                    [{ role: 'resource.write' }],
-                    'denied',
-                    {
-                        type: 'DENY',
-                    },
-                ),
+                createFirewallEventSubscriber({ error: new Error('Denied') }, 'denied', {
+                    type: 'DENY',
+                }),
             ],
         ]);
         expect(firewall.state.value).toBe('denied');
+        expect(firewall.state.context).toEqual({ error: new Error('Denied') });
 
         expect(guard).toHaveBeenCalledTimes(1);
         expect(guard).toHaveBeenCalledWith(
             { role: 'ADMIN' },
-            { name: 'Bob' },
-            [{ role: 'resource.write' }],
-            [
-                {
-                    token: 'abc123',
-                },
-            ],
-        );
-        expect(proxy.challenge).toHaveBeenCalledTimes(1);
-        expect(proxy.challenge).toHaveBeenCalledWith(
             {
-                email: 'bob@localhost',
-                password: 'password',
+                token: 'abc123',
             },
-            [],
-            expect.any(Function),
         );
-        expect(proxy.provision).toHaveBeenCalledTimes(1);
-        expect(proxy.provision).toHaveBeenCalledWith({ role: 'ADMIN' }, [{ token: 'abc123' }]);
+        expect(proxy.request).toHaveBeenCalledTimes(1);
+        expect(proxy.request).toHaveBeenCalledWith({
+            email: 'bob@localhost',
+            password: 'password',
+        });
 
         firewall.dispose();
     });

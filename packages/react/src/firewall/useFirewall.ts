@@ -1,4 +1,4 @@
-import { FirewallContext, FirewallStateValue } from '@castli/core';
+import { FirewallStateValue } from '@castli/core';
 import { useEffect, useState } from 'react';
 import { animationFrameScheduler } from 'rxjs';
 
@@ -8,7 +8,7 @@ export function useFirewall(query?: Record<string, any>) {
     const { fortress } = useFortress();
 
     const [stateValue, setFirewallStateValue] = useState<FirewallStateValue>('idle');
-    const [context, setFirewallContext] = useState<FirewallContext>({
+    const [context, setFirewallContext] = useState<Record<string, any>>({
         permissions: [],
         user: null,
     });

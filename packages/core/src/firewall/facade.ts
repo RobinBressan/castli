@@ -1,24 +1,26 @@
 import { SchedulerLike, Subscription } from 'rxjs';
+import { State } from 'xstate';
 
 import { Facade } from '../core/facade';
-import { Guard, Proxy } from '../core/types';
-import { Fortress, FortressStateValue } from '../fortress';
+import { Fortress, FortressEvent, FortressStateValue } from '../fortress';
 import { FirewallService } from './service';
+import { Guard } from './types';
 
-export class Firewall extends Facade<FirewallService> {
+export class Firewall<FortressContext, FirewallContext> extends Facade<
+    FirewallService<FortressContext, FirewallContext>
+> {
     public readonly query: Record<string, any>;
 
-    private fortress: Fortress;
+    private fortress: Fortress<FortressContext, FirewallContext>;
     private fortressSubscription: Subscription;
 
     constructor(
-        proxy: Proxy,
-        guard: Guard,
+        guard: Guard<FortressContext, FirewallContext>,
         query: Record<string, any>,
-        fortress: Fortress,
+        fortress: Fortress<FortressContext, FirewallContext>,
         scheduler?: SchedulerLike,
     ) {
-        super(new FirewallService(proxy, guard, fortress, scheduler));
+        super(new FirewallService(guard, fortress, scheduler));
 
         this.fortress = fortress;
         this.query = query;
@@ -29,12 +31,14 @@ export class Firewall extends Facade<FirewallService> {
         this.fortressSubscription.unsubscribe();
     }
 
-    private onFortressStateChange = value => {
+    private onFortressStateChange = (
+        value: [State<FortressContext, FortressEvent>, FortressEvent],
+    ) => {
         const [state] = value;
 
         switch (state.value as FortressStateValue) {
             case 'authenticated':
-                this.service.provision(this.query);
+                this.service.authorize(this.query);
                 break;
             case 'unauthenticated':
                 this.service.deauthenticate();

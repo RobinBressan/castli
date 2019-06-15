@@ -1,5 +1,4 @@
 import { ObservableService } from './observable-service';
-import { Proxy } from './types';
 
 /**
  * A Gateway is called by the state machine. Its purpose is to trigger calls on the proxy and,
@@ -7,11 +6,9 @@ import { Proxy } from './types';
  */
 export abstract class Gateway<Service extends ObservableService> {
     protected deferredService: () => Service;
-    protected proxy: Proxy;
 
-    constructor(proxy: Proxy, deferredService: () => Service) {
+    constructor(deferredService: () => Service) {
         this.deferredService = deferredService;
-        this.proxy = proxy;
     }
 
     protected get service() {

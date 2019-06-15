@@ -1,27 +1,23 @@
 import {
-    Challenge,
     Event,
     FirewallEvent,
     FirewallStateValue,
     FortressEvent,
     FortressStateValue,
-    Permission,
-    User,
 } from '../../';
 
-export function createFortressEventSubscriber(
-    challenges: Challenge[],
+export function createFortressEventSubscriber<FortressContext>(
+    context: FortressContext,
     value: FortressStateValue,
     event: FortressEvent | Event<'xstate.init'>,
 ) {
-    return [{ context: { challenges }, value }, event];
+    return [{ context, value }, event];
 }
 
-export function createFirewallEventSubscriber(
-    user: User,
-    permissions: Permission[],
+export function createFirewallEventSubscriber<FirewallContext>(
+    context: FirewallContext,
     value: FirewallStateValue,
     event: FirewallEvent | Event<'xstate.init'>,
 ) {
-    return [{ context: { user, permissions }, value }, event];
+    return [{ context, value }, event];
 }

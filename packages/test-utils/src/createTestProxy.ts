@@ -1,7 +1,7 @@
 import { Proxy } from '@castli/core';
-import { flatten, get } from 'lodash';
+import { flatten } from 'lodash';
 
-type Response = Record<string, any> | Error;
+type Response = Record<string, any> | Error | (() => Response);
 
 function compile(response?: Response) {
     if (!response) {
@@ -15,32 +15,19 @@ function compile(response?: Response) {
     return Promise.resolve(response);
 }
 
-function createMock(
-    response: Response | Response[],
-    postHook?: (index: number, ...args: any[]) => void,
-) {
+function createMock(response: Response | Response[]) {
     let mock = jest.fn();
-    flatten([response]).forEach((value, index) => {
-        mock = mock.mockImplementationOnce(async (...args) => {
-            const result = compile(await value);
-            if (postHook) {
-                postHook(index, ...args);
-            }
+    flatten([response]).forEach(value => {
+        mock = mock.mockImplementationOnce(async () => {
+            const result = compile(await (typeof value === 'function' ? value() : value));
             return result;
         });
     });
     return mock;
 }
 
-export function createTestProxy(
-    responses: Partial<Record<'challenge' | 'provision', Response>>,
-): Proxy {
+export function createTestProxy(response: Response | Response[]): Proxy {
     return {
-        challenge: createMock(
-            responses.challenge,
-            (index, _, __, rechallenge) =>
-                index < get(responses, 'challenge', []).length - 1 && rechallenge(),
-        ),
-        provision: createMock(responses.provision),
+        request: createMock(response),
     };
 }

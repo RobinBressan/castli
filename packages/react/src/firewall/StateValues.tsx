@@ -9,5 +9,4 @@ export const Authorizing = factory('authorizing');
 export const Denied = factory('denied');
 export const Granted = factory('granted');
 export const Idle = factory('idle');
-export const Provisioning = factory('provisioning');
 export const Unauthenticated = factory('unauthenticated');

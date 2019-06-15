@@ -1,6 +1,6 @@
-import { Machine, State as BaseState } from 'xstate';
+import { assign, Machine, State as BaseState } from 'xstate';
 
-import { Event, Permission, User } from '../core/types';
+import { Event } from '../core/types';
 import { FirewallGateway } from './gateway';
 
 export type FirewallEvent =
@@ -8,32 +8,23 @@ export type FirewallEvent =
     | Event<'AUTHORIZE'>
     | Event<'DENY'>
     | Event<'GRANT'>
-    | Event<'PROVISION'>
     | Event<'DEAUTHENTICATE'>;
 
-export type FirewallStateValue =
-    | 'authorizing'
-    | 'denied'
-    | 'granted'
-    | 'idle'
-    | 'provisioning'
-    | 'unauthenticated';
+export type FirewallStateValue = 'authorizing' | 'denied' | 'granted' | 'idle' | 'unauthenticated';
 
 export interface FirewallStateSchema {
     states: Record<FirewallStateValue, {}>;
 }
 
-export interface FirewallContext {
-    permissions: Permission[];
-    user: User;
-}
+export type State<FirewallContext> = BaseState<FirewallContext, FirewallEvent>;
 
-export type State = BaseState<FirewallContext, FirewallEvent>;
-
-export function createMachine(gateway: FirewallGateway) {
+export function createMachine<
+    FortressContext extends Record<string, any> = Record<string, any>,
+    FirewallContext extends Record<string, any> = Record<string, any>
+>(gateway: FirewallGateway<FortressContext, FirewallContext>) {
     return Machine<FirewallContext, FirewallStateSchema, FirewallEvent>(
         {
-            id: 'authorization',
+            id: 'firewall',
             initial: 'idle',
             states: {
                 authorizing: {
@@ -45,28 +36,23 @@ export function createMachine(gateway: FirewallGateway) {
                     },
                 },
                 denied: {
+                    entry: ['flushQueryToContext'],
                     on: {
-                        PROVISION: 'provisioning',
+                        AUTHORIZE: 'authorizing',
                         RESET: 'idle',
                     },
                 },
                 granted: {
+                    entry: ['flushQueryToContext'],
                     on: {
-                        PROVISION: 'provisioning',
+                        AUTHORIZE: 'authorizing',
                         RESET: 'idle',
                     },
                 },
                 idle: {
                     on: {
-                        DEAUTHENTICATE: 'unauthenticated',
-                        PROVISION: 'provisioning',
-                    },
-                },
-                provisioning: {
-                    entry: ['beginProvisioning'],
-                    on: {
                         AUTHORIZE: 'authorizing',
-                        RESET: 'idle',
+                        DEAUTHENTICATE: 'unauthenticated',
                     },
                 },
                 unauthenticated: {
@@ -78,14 +64,14 @@ export function createMachine(gateway: FirewallGateway) {
         },
         {
             actions: {
-                async beginProvisioning(context, event) {
-                    await gateway.provision(context, event);
+                async beginAuthorizing(_, event) {
+                    await gateway.authorize(event);
                 },
-                async beginAuthorizing(context, event) {
-                    await gateway.authorize(context, event);
-                },
+                flushQueryToContext: assign((_, event) => {
+                    return event.query as FirewallContext;
+                }),
             },
         },
-        { permissions: null, user: null },
+        {} as FirewallContext,
     );
 }

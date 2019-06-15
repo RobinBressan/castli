@@ -1,52 +1,33 @@
 import { FirewallService } from './service';
 
 import { Gateway } from '../core/gateway';
-import { Guard, Proxy } from '../core/types';
 import { Fortress } from '../fortress';
-import { FirewallContext, FirewallEvent } from './machine';
+import { FirewallEvent } from './machine';
+import { Guard } from './types';
 
-export class FirewallGateway extends Gateway<FirewallService> {
-    private fortress: Fortress;
-    private guard: Guard;
+export class FirewallGateway<FortressContext, FirewallContext> extends Gateway<
+    FirewallService<FortressContext, FirewallContext>
+> {
+    private fortress: Fortress<FortressContext, FirewallContext>;
+    private guard: Guard<FortressContext, FirewallContext>;
 
     constructor(
-        proxy: Proxy,
-        guard: Guard,
-        deferredService: () => FirewallService,
-        fortress: Fortress,
+        guard: Guard<FortressContext, FirewallContext>,
+        deferredService: () => FirewallService<FortressContext, FirewallContext>,
+        fortress: Fortress<FortressContext, FirewallContext>,
     ) {
-        super(proxy, deferredService);
+        super(deferredService);
 
         this.fortress = fortress;
         this.guard = guard;
     }
 
-    private get challenges() {
-        return this.fortress.state.context.challenges;
-    }
-
-    public async provision(context: FirewallContext, event: FirewallEvent) {
+    public async authorize(event: FirewallEvent) {
         try {
-            const { permissions, user } = await this.proxy.provision(event.query, this.challenges);
+            const query = await this.guard(event.query, this.fortress.state
+                .context as FortressContext);
 
-            context.permissions = permissions;
-            context.user = user;
-
-            this.service.authorize(event.query);
-        } catch (error) {
-            this.service.deauthenticate({ error });
-        }
-    }
-
-    public async authorize(context: FirewallContext, event: FirewallEvent) {
-        const { user, permissions } = context;
-
-        try {
-            if (await this.guard(event.query, user, permissions, this.challenges)) {
-                this.service.grant();
-            } else {
-                this.service.deny();
-            }
+            this.service.grant(query);
         } catch (error) {
             this.service.deny({ error });
         }

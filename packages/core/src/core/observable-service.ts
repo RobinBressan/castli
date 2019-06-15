@@ -37,7 +37,7 @@ export abstract class ObservableService<
         machine: StateMachine<Context, StateSchema, Event>,
         scheduler: SchedulerLike = queueScheduler,
     ) {
-        this.service = interpret(machine);
+        this.service = interpret(machine, { execute: false });
 
         this.state$ = fromEventPattern(
             handler => {
@@ -61,6 +61,10 @@ export abstract class ObservableService<
             filter(() => this.service.initialized),
             first(),
         );
+
+        this.service.onTransition(state => {
+            scheduler.schedule(() => this.service.execute(state));
+        });
 
         this.event$
             .pipe(

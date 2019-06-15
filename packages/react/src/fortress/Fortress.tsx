@@ -1,31 +1,25 @@
-import {
-    Fortress as FortressClass,
-    FortressContext,
-    FortressStateValue,
-    Guard,
-    Proxy,
-} from '@castli/core';
+import { Fortress as FortressClass, FortressStateValue, Guard, Strategy } from '@castli/core';
 import * as React from 'react';
 import { animationFrameScheduler } from 'rxjs';
 
 import { context } from './context';
 
+type Renderer = (fortress: FortressClass) => React.ReactNode;
+
 export interface FortressProps {
-    children: React.ReactNode;
+    children: Renderer | React.ReactNode;
     guard: Guard;
-    proxy: Proxy;
+    strategy: Strategy;
     onReady?(fortress: FortressClass): void;
 }
 
-export const Fortress: React.SFC<FortressProps> = ({ children, guard, onReady, proxy }) => {
-    const fortress = React.useMemo(() => new FortressClass(proxy, guard, animationFrameScheduler), [
-        guard,
-        proxy,
-    ]);
+export const Fortress: React.SFC<FortressProps> = ({ children, guard, onReady, strategy }) => {
+    const fortress = React.useMemo(
+        () => new FortressClass(strategy, guard, animationFrameScheduler),
+        [guard, strategy],
+    );
     const [fortressStateValue, setFortressStateValue] = React.useState<FortressStateValue>('idle');
-    const [fortressContext, setFortressContext] = React.useState<FortressContext>({
-        challenges: [],
-    });
+    const [fortressContext, setFortressContext] = React.useState<Record<string, any>>({});
 
     React.useEffect(() => {
         const subscription = fortress.subscribe(e => {
@@ -46,5 +40,9 @@ export const Fortress: React.SFC<FortressProps> = ({ children, guard, onReady, p
         [fortress, fortressStateValue, fortressContext],
     );
 
-    return <context.Provider value={value}>{children}</context.Provider>;
+    return (
+        <context.Provider value={value}>
+            {typeof children === 'function' ? (children as Renderer)(fortress) : children}
+        </context.Provider>
+    );
 };

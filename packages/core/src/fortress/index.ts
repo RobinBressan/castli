@@ -1,2 +1,3 @@
 export * from './facade';
-export { FortressContext, FortressEvent, FortressStateValue } from './machine';
+export * from './strategy';
+export { FortressEvent, FortressStateValue } from './machine';

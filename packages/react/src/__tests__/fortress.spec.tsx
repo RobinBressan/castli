@@ -1,18 +1,21 @@
-import { Fortress as FortressClass, FortressStateValue } from '@castli/core';
+import {
+    BasicAuthStrategy,
+    Fortress as FortressClass,
+    FortressStateValue,
+    Proxy,
+} from '@castli/core';
 import { createTestProxy } from '@castli/test-utils';
 import * as rtl from '@testing-library/react';
 import * as React from 'react';
 
 import { Fortress, FortressProps, FortressState } from '../..';
 
-function render(
-    proxy: FortressProps['proxy'],
-    guard: FortressProps['guard'],
-    onReady: FortressProps['onReady'],
-) {
+function render(proxy: Proxy, guard: FortressProps['guard'], onReady: FortressProps['onReady']) {
     const format = (stateValue: FortressStateValue) => `I am ${stateValue}`;
+    const strategy = new BasicAuthStrategy(proxy);
+
     const wrapper = rtl.render(
-        <Fortress proxy={proxy} guard={guard} onReady={onReady}>
+        <Fortress strategy={strategy} guard={guard} onReady={onReady}>
             <FortressState.Idle>{format('idle')}</FortressState.Idle>
             <FortressState.Unauthenticated>
                 {format('unauthenticated')}
@@ -35,9 +38,7 @@ describe('<Fortress />', () => {
         expect.assertions(9);
 
         const proxy = createTestProxy({
-            challenge: {
-                token: 'abc123',
-            },
+            token: 'abc123',
         });
 
         const guard = jest.fn().mockReturnValue(true);
@@ -68,8 +69,8 @@ describe('<Fortress />', () => {
     it('should correctly render when challenging() is called and the operation succeeds', async () => {
         expect.assertions(11);
 
-        const proxy = createTestProxy({
-            challenge: new Promise(resolve =>
+        const proxy = createTestProxy(
+            new Promise(resolve =>
                 setTimeout(
                     () =>
                         resolve({
@@ -78,7 +79,7 @@ describe('<Fortress />', () => {
                     10, // we introduce a little delay to simulate network latency
                 ),
             ),
-        });
+        );
 
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
@@ -99,15 +100,11 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('challenging')).toThrowError();
         expect(() => getByStateValue('unauthenticated')).toThrowError();
 
-        expect(proxy.challenge).toHaveBeenCalledTimes(1);
-        expect(proxy.challenge).toHaveBeenCalledWith(
-            {
-                email: 'bob@localhost',
-                password: 'password',
-            },
-            [],
-            expect.any(Function),
-        );
+        expect(proxy.request).toHaveBeenCalledTimes(1);
+        expect(proxy.request).toHaveBeenCalledWith({
+            email: 'bob@localhost',
+            password: 'password',
+        });
 
         rtl.act(() => {
             fortress.deauthenticate();
@@ -124,14 +121,15 @@ describe('<Fortress />', () => {
     it('should correctly render when challenging() is called and the operation fails', async () => {
         expect.assertions(7);
 
-        const proxy = createTestProxy({
-            challenge: new Promise(resolve =>
-                setTimeout(
-                    () => resolve(new Error('Bad credentials')),
-                    10, // we introduce a little delay to simulate network latency
+        const proxy = createTestProxy(
+            () =>
+                new Promise((_, reject) =>
+                    setTimeout(
+                        () => reject(new Error('Bad credentials')),
+                        10, // we introduce a little delay to simulate network latency
+                    ),
                 ),
-            ),
-        });
+        );
 
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
@@ -152,14 +150,10 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('challenging')).toThrowError();
         expect(() => getByStateValue('authenticated')).toThrowError();
 
-        expect(proxy.challenge).toHaveBeenCalledTimes(1);
-        expect(proxy.challenge).toHaveBeenCalledWith(
-            {
-                email: 'bob@localhost',
-                password: 'password',
-            },
-            [],
-            expect.any(Function),
-        );
+        expect(proxy.request).toHaveBeenCalledTimes(1);
+        expect(proxy.request).toHaveBeenCalledWith({
+            email: 'bob@localhost',
+            password: 'password',
+        });
     });
 });

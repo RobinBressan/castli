@@ -1,2 +1,3 @@
+export * from './types';
 export * from './facade';
-export { FirewallContext, FirewallEvent, FirewallStateValue } from './machine';
+export { FirewallEvent, FirewallStateValue } from './machine';
