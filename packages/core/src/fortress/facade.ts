@@ -24,8 +24,12 @@ export class Fortress<
         this.guard = guard;
     }
 
-    public createFirewall(query: Record<string, any> = null, scheduler?: SchedulerLike) {
-        return new Firewall<FortressContext, FirewallContext>(this.guard, query, this, scheduler);
+    get scheduler() {
+        return this.service.scheduler;
+    }
+
+    public createFirewall(query: Record<string, any> = null) {
+        return new Firewall<FortressContext, FirewallContext>(this.guard, query, this);
     }
 
     public challenge(query?: Record<string, any>) {

@@ -78,7 +78,7 @@ describe('<Firewall />', () => {
         expect(() => getByStateValue('idle')).toThrowError();
     });
 
-    it('should transition to granted and then correctly render when the fortress transition to authenticated and guard returns true', async () => {
+    it.only('should transition to granted and then correctly render when the fortress transition to authenticated and guard returns true', async () => {
         expect.assertions(12);
 
         const guard = jest

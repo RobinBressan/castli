@@ -70,14 +70,11 @@ export abstract class ObservableService<
             });
         });
 
-        this.event$
-            .pipe(
-                observeOn(scheduler),
-                delayWhen(() => serviceInitialized$),
-            )
-            .subscribe(event => {
-                this.service.send(event);
-            });
+        // we don't link the event observable to the scheduler as it is just a queue to handle service initialization. Btw, the transition will be
+        // performed within the scheduler
+        this.event$.pipe(delayWhen(() => serviceInitialized$)).subscribe(event => {
+            this.service.send(event);
+        });
     }
 
     get state() {

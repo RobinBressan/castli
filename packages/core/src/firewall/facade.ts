@@ -1,4 +1,4 @@
-import { SchedulerLike, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { State } from 'xstate';
 
 import { Facade } from '../core/facade';
@@ -18,9 +18,8 @@ export class Firewall<FortressContext, FirewallContext> extends Facade<
         guard: Guard<FortressContext, FirewallContext>,
         query: Record<string, any>,
         fortress: Fortress<FortressContext, FirewallContext>,
-        scheduler?: SchedulerLike,
     ) {
-        super(new FirewallService(guard, fortress, scheduler));
+        super(new FirewallService(guard, fortress));
 
         this.fortress = fortress;
         this.query = query;

@@ -1,4 +1,3 @@
-import { SchedulerLike } from 'rxjs';
 import { ObservableService } from '../core/observable-service';
 import { Fortress } from '../fortress';
 import { createMachine, FirewallEvent, FirewallStateSchema } from './machine';
@@ -15,9 +14,8 @@ export class FirewallService<FortressContext, FirewallContext> extends Observabl
     constructor(
         guard: Guard<FortressContext, FirewallContext>,
         fortress: Fortress<FortressContext, FirewallContext>,
-        scheduler?: SchedulerLike,
     ) {
-        super(createMachine(() => this), scheduler);
+        super(createMachine(() => this), fortress.scheduler);
         this.fortress = fortress;
         this.guard = guard;
     }
