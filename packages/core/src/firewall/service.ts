@@ -1,7 +1,6 @@
 import { SchedulerLike } from 'rxjs';
 import { ObservableService } from '../core/observable-service';
 import { Fortress } from '../fortress';
-import { FirewallGateway } from './gateway';
 import { createMachine, FirewallEvent, FirewallStateSchema } from './machine';
 import { Guard } from './types';
 
@@ -10,31 +9,27 @@ export class FirewallService<FortressContext, FirewallContext> extends Observabl
     FirewallEvent,
     FirewallStateSchema
 > {
+    private fortress: Fortress<FortressContext, FirewallContext>;
+    private guard: Guard<FortressContext, FirewallContext>;
+
     constructor(
         guard: Guard<FortressContext, FirewallContext>,
         fortress: Fortress<FortressContext, FirewallContext>,
         scheduler?: SchedulerLike,
     ) {
-        super(createMachine(new FirewallGateway(guard, () => this, fortress)), scheduler);
+        super(createMachine(() => this), scheduler);
+        this.fortress = fortress;
+        this.guard = guard;
     }
 
-    public authorize(query?: Record<string, any>) {
-        this.sendEvent({ type: 'AUTHORIZE', query });
-    }
+    public async authorize(event: FirewallEvent) {
+        try {
+            const query = await this.guard(event.query, this.fortress.state
+                .context as FortressContext);
 
-    public deny(query?: Record<string, any>) {
-        this.sendEvent({ type: 'DENY', query });
-    }
-
-    public deauthenticate(query?: Record<string, any>) {
-        this.sendEvent({ type: 'DEAUTHENTICATE', query });
-    }
-
-    public grant(query?: Record<string, any>) {
-        this.sendEvent({ type: 'GRANT', query });
-    }
-
-    public reset() {
-        this.sendEvent('RESET');
+            this.sendEvent({ type: 'GRANT', query });
+        } catch (error) {
+            this.sendEvent({ type: 'DENY', query: { error } });
+        }
     }
 }

@@ -7,7 +7,7 @@ import {
     SchedulerLike,
     Subject,
 } from 'rxjs';
-import { delayWhen, filter, first, map, observeOn, shareReplay, takeWhile } from 'rxjs/operators';
+import { delayWhen, filter, first, map, observeOn, shareReplay } from 'rxjs/operators';
 import {
     EventObject,
     interpret,
@@ -26,6 +26,7 @@ export abstract class ObservableService<
     Event extends EventObject = EventObject,
     StateSchema extends BaseStateSchema = any
 > {
+    public readonly scheduler: SchedulerLike;
     public readonly state$: Observable<[State<Context, Event>, Event]>;
     public readonly pipe: Observable<[State<Context, Event>, Event]>['pipe'];
     public readonly subscribe: Observable<[State<Context, Event>, Event]>['subscribe'];
@@ -37,6 +38,7 @@ export abstract class ObservableService<
         machine: StateMachine<Context, StateSchema, Event>,
         scheduler: SchedulerLike = queueScheduler,
     ) {
+        this.scheduler = scheduler;
         this.service = interpret(machine, { execute: false });
 
         this.state$ = fromEventPattern(
@@ -63,7 +65,9 @@ export abstract class ObservableService<
         );
 
         this.service.onTransition(state => {
-            scheduler.schedule(() => this.service.execute(state));
+            scheduler.schedule(() => {
+                this.service.execute(state);
+            });
         });
 
         this.event$
@@ -80,18 +84,22 @@ export abstract class ObservableService<
         return this.service.state;
     }
 
+    public dispose() {
+        this.service.stop();
+        this.event$.complete();
+    }
+
     public sendEvent(event: Event | Event['type']) {
         this.event$.next(event);
     }
 
-    public waitFor(stateValue: keyof StateSchema['states']) {
-        return this.state$
-            .pipe(
-                takeWhile(value => {
-                    const [state] = value;
-                    return (state.value as any) !== stateValue;
-                }),
-            )
-            .toPromise();
+    public waitFor$(stateValue: keyof StateSchema['states']) {
+        return this.state$.pipe(
+            filter(value => {
+                const [state] = value;
+                return (state.value as keyof StateSchema['states']) === stateValue;
+            }),
+            first(),
+        );
     }
 }

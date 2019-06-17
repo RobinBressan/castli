@@ -12,25 +12,27 @@ export class Fortress<
     FortressContext extends Record<string, any> = Record<string, any>,
     FirewallContext extends Record<string, any> = Record<string, any>
 > extends Facade<FortressService<FortressContext>> {
-    public readonly challenge: FortressService<FortressContext>['challenge'];
-    public readonly deauthenticate: FortressService<FortressContext>['deauthenticate'];
-
     private guard: Guard<FortressContext, FirewallContext>;
 
     constructor(
-        strategy: Strategy<unknown, FortressContext>,
+        strategy: Strategy<any, FortressContext>,
         guard: Guard<FortressContext, FirewallContext>,
         scheduler?: SchedulerLike,
     ) {
         super(new FortressService<FortressContext>(strategy, scheduler));
 
         this.guard = guard;
-
-        this.challenge = this.service.challenge.bind(this.service);
-        this.deauthenticate = this.service.deauthenticate.bind(this.service);
     }
 
-    public createFirewall(query: Record<string, unknown> = null, scheduler?: SchedulerLike) {
+    public createFirewall(query: Record<string, any> = null, scheduler?: SchedulerLike) {
         return new Firewall<FortressContext, FirewallContext>(this.guard, query, this, scheduler);
+    }
+
+    public challenge(query?: Record<string, any>) {
+        this.service.sendEvent({ type: 'CHALLENGE', query });
+    }
+
+    public deauthenticate(query?: Record<string, any>) {
+        this.service.sendEvent({ type: 'DEAUTHENTICATE', query });
     }
 }

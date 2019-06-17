@@ -7,7 +7,7 @@ import { ObservableService } from './observable-service';
 export abstract class Facade<Service extends ObservableService> {
     public pipe: Service['pipe'];
     public subscribe: Service['subscribe'];
-    public waitFor: Service['waitFor'];
+    public waitFor$: Service['waitFor$'];
 
     protected service: Service;
 
@@ -16,7 +16,7 @@ export abstract class Facade<Service extends ObservableService> {
 
         this.pipe = this.service.pipe.bind(this.service);
         this.subscribe = this.service.subscribe.bind(this.service);
-        this.waitFor = this.service.waitFor.bind(this.service);
+        this.waitFor$ = this.service.waitFor$.bind(this.service);
     }
 
     get state() {

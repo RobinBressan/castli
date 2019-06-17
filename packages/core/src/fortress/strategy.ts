@@ -7,19 +7,22 @@ export abstract class Strategy<
     private fortressService: FortressService<Response>;
 
     public injectFortressService(fortressService: FortressService<Response>) {
-        if (this.fortressService) {
-            throw new Error('Fortress service can be injected only once');
-        }
         this.fortressService = fortressService;
+
+        return this;
     }
 
-    public abstract start(query: Query);
+    public abstract begin(query: Query);
 
-    protected authenticate(query: Response) {
-        this.fortressService.authenticate(query);
+    protected get scheduler() {
+        return this.fortressService.scheduler;
     }
 
-    protected deauthenticate(query: Record<string, any>) {
-        this.fortressService.deauthenticate(query);
+    protected commit(query: Response) {
+        this.fortressService.sendEvent({ type: 'AUTHENTICATE', query });
+    }
+
+    protected rollback(query: Record<string, any>) {
+        this.fortressService.sendEvent({ type: 'DEAUTHENTICATE', query });
     }
 }

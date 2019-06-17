@@ -1,7 +1,7 @@
 import { assign, Machine, State as BaseState } from 'xstate';
 
 import { Event } from '../core/types';
-import { FirewallGateway } from './gateway';
+import { FirewallService } from './service';
 
 export type FirewallEvent =
     | Event<'RESET'>
@@ -21,7 +21,7 @@ export type State<FirewallContext> = BaseState<FirewallContext, FirewallEvent>;
 export function createMachine<
     FortressContext extends Record<string, any> = Record<string, any>,
     FirewallContext extends Record<string, any> = Record<string, any>
->(gateway: FirewallGateway<FortressContext, FirewallContext>) {
+>(deferredService: () => FirewallService<FortressContext, FirewallContext>) {
     return Machine<FirewallContext, FirewallStateSchema, FirewallEvent>(
         {
             id: 'firewall',
@@ -65,7 +65,7 @@ export function createMachine<
         {
             actions: {
                 async beginAuthorizing(_, event) {
-                    await gateway.authorize(event);
+                    await deferredService().authorize(event);
                 },
                 flushQueryToContext: assign((_, event) => {
                     return event.query as FirewallContext;

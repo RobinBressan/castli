@@ -4,7 +4,7 @@ import {
     FirewallStateValue,
     FortressEvent,
     FortressStateValue,
-} from '../../';
+} from '@castli/core';
 
 export function createFortressEventSubscriber<FortressContext>(
     context: FortressContext,

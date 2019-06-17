@@ -38,15 +38,15 @@ export class Firewall<FortressContext, FirewallContext> extends Facade<
 
         switch (state.value as FortressStateValue) {
             case 'authenticated':
-                this.service.authorize(this.query);
+                this.service.sendEvent({ type: 'AUTHORIZE', query: this.query });
                 break;
             case 'unauthenticated':
-                this.service.deauthenticate();
+                this.service.sendEvent('DEAUTHENTICATE');
                 break;
             case 'idle':
                 break;
             default:
-                this.service.reset();
+                this.service.sendEvent('RESET');
         }
     };
 }

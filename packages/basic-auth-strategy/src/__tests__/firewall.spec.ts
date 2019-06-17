@@ -1,7 +1,7 @@
-import { createTestProxy } from '@castli/test-utils';
+import { Fortress } from '@castli/core';
+import { createFirewallEventSubscriber, createTestProxy } from '@castli/test-utils';
 
-import { BasicAuthStrategy, Fortress } from '../../';
-import { createFirewallEventSubscriber } from './subscribers';
+import { BasicAuthStrategy } from '../../';
 
 interface BasicAuthQuery {
     email: string;
@@ -31,7 +31,7 @@ describe('Firewall', () => {
         const subscriber = jest.fn();
         firewall.subscribe(subscriber);
 
-        await firewall.waitFor('unauthenticated');
+        await firewall.waitFor$('unauthenticated').toPromise();
 
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber.mock.calls).toMatchObject([
@@ -75,7 +75,7 @@ describe('Firewall', () => {
         const subscriber = jest.fn();
         firewall.subscribe(subscriber);
 
-        await firewall.waitFor('granted');
+        await firewall.waitFor$('granted').toPromise();
 
         expect(subscriber).toHaveBeenCalledTimes(4);
         expect(subscriber.mock.calls).toMatchObject([
@@ -140,7 +140,7 @@ describe('Firewall', () => {
         const subscriber = jest.fn();
         firewall.subscribe(subscriber);
 
-        await firewall.waitFor('denied');
+        await firewall.waitFor$('denied').toPromise();
 
         expect(subscriber).toHaveBeenCalledTimes(4);
         expect(subscriber.mock.calls).toMatchObject([

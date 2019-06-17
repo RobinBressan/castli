@@ -1,18 +1,17 @@
-import {
-    BasicAuthStrategy,
-    FirewallStateValue,
-    Fortress as FortressClass,
-    Proxy,
-} from '@castli/core';
-import { createTestProxy } from '@castli/test-utils';
+import { FirewallStateValue, Fortress as FortressClass } from '@castli/core';
+import { TestStrategy } from '@castli/test-utils';
 import * as rtl from '@testing-library/react';
 import * as React from 'react';
 
 import { Firewall, FirewallState, Fortress, FortressProps } from '../../';
 
-function render(proxy: Proxy, guard: FortressProps['guard'], onReady: FortressProps['onReady']) {
+function render(
+    guard: FortressProps['guard'],
+    onReady: FortressProps['onReady'],
+    strategyShouldResolve?: boolean,
+) {
     const format = (stateValue: FirewallStateValue) => `I am ${stateValue}`;
-    const strategy = new BasicAuthStrategy(proxy);
+    const strategy = new TestStrategy(strategyShouldResolve);
     const wrapper = rtl.render(
         <Fortress strategy={strategy} guard={guard} onReady={onReady}>
             <Firewall query={{ role: 'ADMIN' }}>
@@ -39,14 +38,10 @@ describe('<Firewall />', () => {
     it('should correctly render when the fortress is idle', async () => {
         expect.assertions(5);
 
-        const proxy = createTestProxy({
-            token: 'abc123',
-        });
-
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(proxy, guard, onReady);
+        const { getByStateValue } = render(guard, onReady);
 
         expect(getByStateValue('idle')).toBeInTheDocument();
         expect(() => getByStateValue('authorizing')).toThrowError();
@@ -58,14 +53,10 @@ describe('<Firewall />', () => {
     it('should correctly render when the fortress transition to unauthenticated', async () => {
         expect.assertions(10);
 
-        const proxy = createTestProxy({
-            token: 'abc123',
-        });
-
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(proxy, guard, onReady);
+        const { getByStateValue } = render(guard, onReady);
 
         expect(getByStateValue('idle')).toBeInTheDocument();
         expect(() => getByStateValue('authorizing')).toThrowError();
@@ -90,25 +81,12 @@ describe('<Firewall />', () => {
     it('should transition to granted and then correctly render when the fortress transition to authenticated and guard returns true', async () => {
         expect.assertions(12);
 
-        const proxy = createTestProxy(
-            () =>
-                new Promise(resolve =>
-                    setTimeout(
-                        () =>
-                            resolve({
-                                token: 'abc123',
-                            }),
-                        10,
-                    ),
-                ),
-        );
-
         const guard = jest
             .fn()
             .mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(true), 100)));
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(proxy, guard, onReady);
+        const { getByStateValue } = render(guard, onReady);
 
         expect(getByStateValue('idle')).toBeInTheDocument();
         expect(() => getByStateValue('authorizing')).toThrowError();
@@ -132,27 +110,12 @@ describe('<Firewall />', () => {
         expect(guard).toHaveBeenCalledTimes(1);
         expect(guard).toHaveBeenCalledWith(
             { role: 'ADMIN' },
-            {
-                token: 'abc123',
-            },
+            { email: 'bob@localhost', password: 'password' }, // this is the behavior of the test strategy
         );
     });
 
     it('should transition to denied and then correctly render when the fortress transition to authenticated and guard returns false', async () => {
         expect.assertions(12);
-
-        const proxy = createTestProxy(
-            () =>
-                new Promise(resolve =>
-                    setTimeout(
-                        () =>
-                            resolve({
-                                token: 'abc123',
-                            }),
-                        10,
-                    ),
-                ),
-        );
 
         const guard = jest
             .fn()
@@ -161,7 +124,7 @@ describe('<Firewall />', () => {
             );
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(proxy, guard, onReady);
+        const { getByStateValue } = render(guard, onReady);
 
         expect(getByStateValue('idle')).toBeInTheDocument();
         expect(() => getByStateValue('authorizing')).toThrowError();
@@ -185,9 +148,7 @@ describe('<Firewall />', () => {
         expect(guard).toHaveBeenCalledTimes(1);
         expect(guard).toHaveBeenCalledWith(
             { role: 'ADMIN' },
-            {
-                token: 'abc123',
-            },
+            { email: 'bob@localhost', password: 'password' }, // this is the behavior of the test strategy
         );
     });
 });

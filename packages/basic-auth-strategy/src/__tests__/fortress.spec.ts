@@ -1,8 +1,7 @@
-import { createTestProxy } from '@castli/test-utils';
+import { Fortress } from '@castli/core';
+import { createFortressEventSubscriber, createTestProxy } from '@castli/test-utils';
 
 import { BasicAuthStrategy } from '../../';
-import { Fortress } from '../fortress';
-import { createFortressEventSubscriber } from './subscribers';
 
 interface BasicAuthQuery {
     email: string;
@@ -27,7 +26,7 @@ describe('Fortress', () => {
 
         expect(fortress.state.value).toBe('idle');
         fortress.deauthenticate();
-        await fortress.waitFor('unauthenticated');
+        await fortress.waitFor$('unauthenticated').toPromise();
 
         expect(fortress.state.value).toBe('unauthenticated');
         expect(subscriber.mock.calls).toMatchObject([
@@ -58,7 +57,7 @@ describe('Fortress', () => {
 
         expect(fortress.state.value).toBe('idle');
         fortress.challenge({ email: 'bob@localhost', password: 'password' });
-        await fortress.waitFor('authenticated');
+        await fortress.waitFor$('authenticated').toPromise();
 
         expect(fortress.state.value).toBe('authenticated');
         expect(subscriber.mock.calls).toMatchObject([
@@ -99,7 +98,7 @@ describe('Fortress', () => {
 
         expect(fortress.state.value).toBe('idle');
         fortress.challenge({ email: 'bob@localhost', password: 'password' });
-        await fortress.waitFor('unauthenticated');
+        await fortress.waitFor$('unauthenticated').toPromise();
 
         expect(fortress.state.value).toBe('unauthenticated');
         expect(subscriber.mock.calls).toMatchObject([

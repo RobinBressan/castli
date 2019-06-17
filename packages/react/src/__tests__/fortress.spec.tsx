@@ -1,18 +1,17 @@
-import {
-    BasicAuthStrategy,
-    Fortress as FortressClass,
-    FortressStateValue,
-    Proxy,
-} from '@castli/core';
-import { createTestProxy } from '@castli/test-utils';
+import { Fortress as FortressClass, FortressStateValue } from '@castli/core';
+import { TestStrategy } from '@castli/test-utils';
 import * as rtl from '@testing-library/react';
 import * as React from 'react';
 
 import { Fortress, FortressProps, FortressState } from '../..';
 
-function render(proxy: Proxy, guard: FortressProps['guard'], onReady: FortressProps['onReady']) {
+function render(
+    guard: FortressProps['guard'],
+    onReady: FortressProps['onReady'],
+    strategyShouldResolve?: boolean,
+) {
     const format = (stateValue: FortressStateValue) => `I am ${stateValue}`;
-    const strategy = new BasicAuthStrategy(proxy);
+    const strategy = new TestStrategy(strategyShouldResolve);
 
     const wrapper = rtl.render(
         <Fortress strategy={strategy} guard={guard} onReady={onReady}>
@@ -37,14 +36,10 @@ describe('<Fortress />', () => {
     it('should correctly render when desauthenticate() is called', async () => {
         expect.assertions(9);
 
-        const proxy = createTestProxy({
-            token: 'abc123',
-        });
-
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(proxy, guard, onReady);
+        const { getByStateValue } = render(guard, onReady);
 
         expect(getByStateValue('idle')).toBeInTheDocument();
         expect(() => getByStateValue('unauthenticated')).toThrowError();
@@ -67,24 +62,12 @@ describe('<Fortress />', () => {
     });
 
     it('should correctly render when challenging() is called and the operation succeeds', async () => {
-        expect.assertions(11);
-
-        const proxy = createTestProxy(
-            new Promise(resolve =>
-                setTimeout(
-                    () =>
-                        resolve({
-                            token: 'abc123',
-                        }),
-                    10, // we introduce a little delay to simulate network latency
-                ),
-            ),
-        );
+        expect.assertions(9);
 
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(proxy, guard, onReady);
+        const { getByStateValue } = render(guard, onReady);
 
         expect(onReady).toHaveBeenCalledTimes(1);
 
@@ -100,12 +83,6 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('challenging')).toThrowError();
         expect(() => getByStateValue('unauthenticated')).toThrowError();
 
-        expect(proxy.request).toHaveBeenCalledTimes(1);
-        expect(proxy.request).toHaveBeenCalledWith({
-            email: 'bob@localhost',
-            password: 'password',
-        });
-
         rtl.act(() => {
             fortress.deauthenticate();
         });
@@ -119,22 +96,12 @@ describe('<Fortress />', () => {
     });
 
     it('should correctly render when challenging() is called and the operation fails', async () => {
-        expect.assertions(7);
-
-        const proxy = createTestProxy(
-            () =>
-                new Promise((_, reject) =>
-                    setTimeout(
-                        () => reject(new Error('Bad credentials')),
-                        10, // we introduce a little delay to simulate network latency
-                    ),
-                ),
-        );
+        expect.assertions(5);
 
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(proxy, guard, onReady);
+        const { getByStateValue } = render(guard, onReady, false);
 
         expect(onReady).toHaveBeenCalledTimes(1);
 
@@ -149,11 +116,5 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('idle')).toThrowError();
         expect(() => getByStateValue('challenging')).toThrowError();
         expect(() => getByStateValue('authenticated')).toThrowError();
-
-        expect(proxy.request).toHaveBeenCalledTimes(1);
-        expect(proxy.request).toHaveBeenCalledWith({
-            email: 'bob@localhost',
-            password: 'password',
-        });
     });
 });
