@@ -4,7 +4,14 @@ export class TestStrategy extends Strategy {
     private shouldResolve: boolean;
 
     constructor(shouldResolve = true) {
-        super();
+        super(
+            () =>
+                ({
+                    pipe: jest.fn(),
+                    subscribe: jest.fn(),
+                    waitFor$: jest.fn(),
+                } as any),
+        );
         this.shouldResolve = shouldResolve;
     }
 

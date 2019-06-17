@@ -8,15 +8,20 @@ export class FortressService<FortressContext> extends ObservableService<
     FortressEvent,
     FortressStateSchema
 > {
-    private strategy: Strategy<any, FortressContext>;
+    // tslint:disable-next-line:variable-name
+    private _strategy: Strategy<any, FortressContext>;
 
     constructor(strategy: Strategy<any, FortressContext>, scheduler?: SchedulerLike) {
         super(createMachine(() => this), scheduler);
 
-        this.strategy = strategy.injectFortressService(this);
+        this._strategy = strategy.boot(this);
+    }
+
+    get strategy() {
+        return this._strategy.facade;
     }
 
     public beginStrategy(query?: Record<string, unknown>) {
-        return this.strategy.begin(query);
+        return this._strategy.begin(query);
     }
 }

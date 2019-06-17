@@ -1,5 +1,5 @@
 import { Proxy, Strategy } from '@castli/core';
-import { race } from 'rxjs';
+import { race, SchedulerLike } from 'rxjs';
 import { observeOn } from 'rxjs/operators';
 import { BasicAuthService } from './service';
 
@@ -7,18 +7,15 @@ export class BasicAuthStrategy<
     Query extends Record<string, any> = Record<string, any>,
     Response extends Record<string, any> = Record<string, any>
 > extends Strategy<Query, Response> {
-    private proxy: Proxy<Query, Response>;
-
     constructor(proxy: Proxy<Query, Response>) {
-        super();
-        this.proxy = proxy;
+        super((scheduler: SchedulerLike) => new BasicAuthService<Query>(proxy, scheduler));
     }
 
     public async begin(query?: Query) {
-        const service = new BasicAuthService<Query>(this.proxy, this.scheduler);
+        this.service.restart();
 
-        race(service.waitFor$('authenticated'), service.waitFor$('unauthenticated'))
-            .pipe(observeOn(service.scheduler))
+        race(this.service.waitFor$('authenticated'), this.service.waitFor$('unauthenticated'))
+            .pipe(observeOn(this.service.scheduler))
             .subscribe(value => {
                 const [state, event] = value;
                 switch (state.value) {
@@ -30,9 +27,9 @@ export class BasicAuthStrategy<
                         break;
                 }
 
-                service.dispose();
+                this.service.dispose();
             });
 
-        service.sendEvent({ type: 'CHALLENGE', query });
+        this.service.sendEvent({ type: 'CHALLENGE', query });
     }
 }

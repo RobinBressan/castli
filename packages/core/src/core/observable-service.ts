@@ -86,6 +86,10 @@ export abstract class ObservableService<
         this.event$.complete();
     }
 
+    public restart() {
+        this.service.start();
+    }
+
     public sendEvent(event: Event | Event['type']) {
         this.event$.next(event);
     }

@@ -4,7 +4,7 @@ import { ObservableService } from './observable-service';
  * A facade is the public API of a domain
  * To consume a domain API (fortress or firewall for instance) we should only rely on its facade
  */
-export abstract class Facade<Service extends ObservableService> {
+export class Facade<Service extends ObservableService> {
     public pipe: Service['pipe'];
     public subscribe: Service['subscribe'];
     public waitFor$: Service['waitFor$'];
