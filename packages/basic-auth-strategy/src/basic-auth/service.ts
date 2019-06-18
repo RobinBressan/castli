@@ -1,8 +1,8 @@
 import { ObservableService } from '@castli/core';
 import { SchedulerLike } from 'rxjs';
 
+import { Proxy } from '../types';
 import { BasicAuthEvent, BasicAuthStateSchema, createMachine } from './machine';
-import { Proxy } from './types';
 
 export class BasicAuthService<Query extends Record<string, any>> extends ObservableService<
     {},

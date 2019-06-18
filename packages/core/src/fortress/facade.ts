@@ -24,10 +24,6 @@ export class Fortress<
         this.guard = guard;
     }
 
-    get scheduler() {
-        return this.service.scheduler;
-    }
-
     get strategy() {
         return this.service.strategy;
     }

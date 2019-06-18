@@ -15,7 +15,7 @@ export class FirewallService<FortressContext, FirewallContext> extends Observabl
         guard: Guard<FortressContext, FirewallContext>,
         fortress: Fortress<FortressContext, FirewallContext>,
     ) {
-        super(createMachine(() => this), fortress.scheduler);
+        super(createMachine(() => this), fortress.service.scheduler);
         this.fortress = fortress;
         this.guard = guard;
     }

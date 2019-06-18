@@ -8,20 +8,25 @@ export class FortressService<FortressContext> extends ObservableService<
     FortressEvent,
     FortressStateSchema
 > {
-    // tslint:disable-next-line:variable-name
-    private _strategy: Strategy<any, FortressContext>;
+    public readonly strategy: Strategy<any, FortressContext>;
 
     constructor(strategy: Strategy<any, FortressContext>, scheduler?: SchedulerLike) {
-        super(createMachine(() => this), scheduler);
+        super(
+            createMachine({
+                beginChallenge: (_, event) =>
+                    this.strategy.begin(event.query, this.commit, this.rollback),
+            }),
+            scheduler,
+        );
 
-        this._strategy = strategy.boot(this);
+        this.strategy = strategy;
     }
 
-    get strategy() {
-        return this._strategy.facade;
-    }
+    private commit = (query: any) => {
+        this.sendEvent({ type: 'AUTHENTICATE', query });
+    };
 
-    public beginStrategy(query?: Record<string, unknown>) {
-        return this._strategy.begin(query);
-    }
+    private rollback = (query: Record<string, any>) => {
+        this.sendEvent({ type: 'DEAUTHENTICATE', query });
+    };
 }

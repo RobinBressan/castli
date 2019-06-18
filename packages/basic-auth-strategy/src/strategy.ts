@@ -2,34 +2,32 @@ import { Strategy } from '@castli/core';
 import { race, SchedulerLike } from 'rxjs';
 import { observeOn } from 'rxjs/operators';
 
-import { BasicAuth } from './facade';
-import { BasicAuthService } from './service';
+import { BasicAuthService } from './basic-auth/service';
 import { Proxy } from './types';
 
 export class BasicAuthStrategy<
     Query extends Record<string, any> = Record<string, any>,
     Response extends Record<string, any> = Record<string, any>
 > extends Strategy<Query, Response> {
-    constructor(proxy: Proxy<Query, Response>) {
-        super(
-            (scheduler: SchedulerLike) => new BasicAuthService<Query>(proxy, scheduler),
-            (service: BasicAuthService<Query>) => new BasicAuth<Query>(service),
-        );
+    constructor(proxy: Proxy<Query, Response>, scheduler?: SchedulerLike) {
+        super(new BasicAuthService(proxy, scheduler));
     }
 
-    public async begin(query?: Query) {
-        this.service.restart();
-
-        race(this.service.waitFor$('authenticated'), this.service.waitFor$('unauthenticated'))
+    public async begin(
+        query: Query,
+        commit: (response: Response) => void,
+        rollback: (response: Response) => void,
+    ) {
+        race(this.waitFor$('authenticated'), this.waitFor$('unauthenticated'))
             .pipe(observeOn(this.service.scheduler))
             .subscribe(value => {
                 const [state, event] = value;
                 switch (state.value) {
                     case 'authenticated':
-                        this.commit(event.query as Response);
+                        commit(event.query as Response);
                         break;
                     case 'unauthenticated':
-                        this.rollback(event.query);
+                        rollback(event.query);
                         break;
                 }
 

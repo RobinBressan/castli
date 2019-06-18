@@ -5,11 +5,11 @@ import { ObservableService } from './observable-service';
  * To consume a domain API (fortress or firewall for instance) we should only rely on its facade
  */
 export class Facade<Service extends ObservableService> {
-    public pipe: Service['pipe'];
-    public subscribe: Service['subscribe'];
-    public waitFor$: Service['waitFor$'];
+    public readonly pipe: Service['pipe'];
+    public readonly subscribe: Service['subscribe'];
+    public readonly waitFor$: Service['waitFor$'];
 
-    protected service: Service;
+    public readonly service: Service;
 
     constructor(service: Service) {
         this.service = service;

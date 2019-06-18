@@ -1,7 +1,6 @@
-import { assign, Machine, State as BaseState } from 'xstate';
+import { ActionFunction, ActionObject, assign, Machine, State as BaseState } from 'xstate';
 
 import { Event } from '../core/types';
-import { FortressService } from './service';
 
 export type FortressEvent =
     | Event<'AUTHENTICATE'>
@@ -17,8 +16,13 @@ export interface FortressStateSchema {
 
 export type State<FortressContext> = BaseState<FortressContext, FortressEvent>;
 
+interface Actions
+    extends Record<string, ActionObject<{}, FortressEvent> | ActionFunction<{}, FortressEvent>> {
+    beginChallenge(context: {}, event: FortressEvent);
+}
+
 export function createMachine<FortressContext extends Record<string, any> = Record<string, any>>(
-    deferredService: () => FortressService<FortressContext>,
+    actions: Actions,
 ) {
     return Machine<FortressContext, FortressStateSchema, FortressEvent>(
         {
@@ -54,9 +58,7 @@ export function createMachine<FortressContext extends Record<string, any> = Reco
         },
         {
             actions: {
-                async beginChallenge(_, event) {
-                    deferredService().beginStrategy(event.query);
-                },
+                ...actions,
                 flushQueryToContext: assign((_, event) => {
                     return event.query as FortressContext;
                 }),

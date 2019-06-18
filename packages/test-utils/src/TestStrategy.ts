@@ -1,4 +1,4 @@
-import { Facade, Strategy } from '@castli/core';
+import { Strategy } from '@castli/core';
 
 export class TestStrategy extends Strategy {
     private shouldResolve: boolean;
@@ -10,15 +10,15 @@ export class TestStrategy extends Strategy {
             waitFor$: jest.fn(),
         } as any;
 
-        super(() => fakeService, () => new Facade(fakeService));
+        super(fakeService);
         this.shouldResolve = shouldResolve;
     }
 
-    public begin(query?: Record<string, any>) {
+    public begin(query: Record<string, any>, commit, rollback) {
         if (this.shouldResolve) {
-            process.nextTick(() => this.commit(query));
+            process.nextTick(() => commit(query));
         } else {
-            process.nextTick(() => this.rollback(new Error('Failure')));
+            process.nextTick(() => rollback(new Error('Failure')));
         }
     }
 }
