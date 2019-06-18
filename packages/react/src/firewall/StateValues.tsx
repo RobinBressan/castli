@@ -3,7 +3,10 @@ import { createStateValueComponent } from '../createStateValueComponent';
 import { context, FirewallReactContext } from './context';
 
 const factory = (stateValue: FirewallStateValue) =>
-    createStateValueComponent<FirewallStateValue, FirewallReactContext>(context, stateValue);
+    createStateValueComponent<FirewallStateValue, Record<string, any>, FirewallReactContext>(
+        context,
+        stateValue,
+    );
 
 export const Authorizing = factory('authorizing');
 export const Denied = factory('denied');

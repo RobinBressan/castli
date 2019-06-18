@@ -3,6 +3,7 @@ import { TestStrategy } from '@castli/test-utils';
 import * as rtl from '@testing-library/react';
 import * as React from 'react';
 
+import { queueScheduler } from 'rxjs';
 import { Firewall, FirewallState, Fortress, FortressProps } from '../../';
 
 function render(
@@ -13,7 +14,7 @@ function render(
     const format = (stateValue: FirewallStateValue) => `I am ${stateValue}`;
     const strategy = new TestStrategy(strategyShouldResolve);
     const wrapper = rtl.render(
-        <Fortress strategy={strategy} guard={guard} onReady={onReady}>
+        <Fortress strategy={strategy} guard={guard} onReady={onReady} scheduler={queueScheduler}>
             <Firewall query={{ role: 'ADMIN' }}>
                 <FirewallState.Idle>{format('idle')}</FirewallState.Idle>
                 <FirewallState.Unauthenticated>
@@ -78,7 +79,7 @@ describe('<Firewall />', () => {
         expect(() => getByStateValue('idle')).toThrowError();
     });
 
-    it.only('should transition to granted and then correctly render when the fortress transition to authenticated and guard returns true', async () => {
+    it('should transition to granted and then correctly render when the fortress transition to authenticated and guard returns true', async () => {
         expect.assertions(12);
 
         const guard = jest

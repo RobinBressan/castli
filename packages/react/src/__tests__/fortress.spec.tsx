@@ -2,6 +2,7 @@ import { Fortress as FortressClass, FortressStateValue } from '@castli/core';
 import { TestStrategy } from '@castli/test-utils';
 import * as rtl from '@testing-library/react';
 import * as React from 'react';
+import { queueScheduler } from 'rxjs';
 
 import { Fortress, FortressProps, FortressState } from '../..';
 
@@ -14,7 +15,7 @@ function render(
     const strategy = new TestStrategy(strategyShouldResolve);
 
     const wrapper = rtl.render(
-        <Fortress strategy={strategy} guard={guard} onReady={onReady}>
+        <Fortress strategy={strategy} guard={guard} onReady={onReady} scheduler={queueScheduler}>
             <FortressState.Idle>{format('idle')}</FortressState.Idle>
             <FortressState.Unauthenticated>
                 {format('unauthenticated')}

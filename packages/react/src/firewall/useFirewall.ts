@@ -1,6 +1,5 @@
 import { FirewallStateValue } from '@castli/core';
 import { useEffect, useState } from 'react';
-import { animationFrameScheduler } from 'rxjs';
 
 import { useFortress } from '../fortress';
 
@@ -14,7 +13,7 @@ export function useFirewall(query?: Record<string, any>) {
     });
 
     useEffect(() => {
-        const firewall = fortress.createFirewall(query, animationFrameScheduler);
+        const firewall = fortress.createFirewall(query);
         const subscription = firewall.subscribe(e => {
             const [state] = e;
             setFirewallStateValue(state.value as FirewallStateValue);

@@ -27,9 +27,7 @@ export abstract class ObservableService<
     StateSchema extends BaseStateSchema = any
 > {
     public readonly scheduler: SchedulerLike;
-    public readonly state$: Observable<[State<Context, Event>, Event]>;
-    public readonly pipe: Observable<[State<Context, Event>, Event]>['pipe'];
-    public readonly subscribe: Observable<[State<Context, Event>, Event]>['subscribe'];
+    private state$: Observable<[State<Context, Event>, Event]>;
 
     private service: Interpreter<Context, StateSchema, Event>;
     private event$ = new Subject<Event | Event['type']>();
@@ -39,46 +37,21 @@ export abstract class ObservableService<
         scheduler: SchedulerLike = queueScheduler,
     ) {
         this.scheduler = scheduler;
-        this.service = interpret(machine, { execute: false });
+        this.service = interpret(machine);
 
-        this.state$ = fromEventPattern(
-            handler => {
-                this.service.onTransition(handler).start();
-                return this.service;
-            },
-            (_, service) => service.stop(),
-        ).pipe(
-            observeOn(scheduler),
-            // we want to store the last emission, to ensure its new subscriber get notified with it
-            // this way, late subscribers don't get out of sync
-            shareReplay<[State<Context, Event>, Event]>(1),
-            map(value => cloneDeep(value)),
-        );
-
-        this.pipe = this.state$.pipe.bind(this.state$);
-        this.subscribe = this.state$.subscribe.bind(this.state$);
-
-        // we poll the service to get a complete observable once initialized
-        const serviceInitialized$ = interval(1, scheduler).pipe(
-            filter(() => this.service.initialized),
-            first(),
-        );
-
-        this.service.onTransition(state => {
-            scheduler.schedule(() => {
-                this.service.execute(state);
-            });
-        });
-
-        // we don't link the event observable to the scheduler as it is just a queue to handle service initialization. Btw, the transition will be
-        // performed within the scheduler
-        this.event$.pipe(delayWhen(() => serviceInitialized$)).subscribe(event => {
-            this.service.send(event);
-        });
+        this.start();
     }
 
     get state() {
         return this.service.state;
+    }
+
+    get pipe(): Observable<[State<Context, Event>, Event]>['pipe'] {
+        return this.state$.pipe.bind(this.state$);
+    }
+
+    get subscribe(): Observable<[State<Context, Event>, Event]>['subscribe'] {
+        return this.state$.subscribe.bind(this.state$);
     }
 
     public dispose() {
@@ -87,7 +60,8 @@ export abstract class ObservableService<
     }
 
     public restart() {
-        this.service.start();
+        this.service.stop();
+        this.start();
     }
 
     public sendEvent(event: Event | Event['type']) {
@@ -102,5 +76,35 @@ export abstract class ObservableService<
             }),
             first(),
         );
+    }
+
+    private start() {
+        this.state$ = fromEventPattern(
+            handler => {
+                this.service.onTransition(handler).start();
+                return this.service;
+            },
+            (_, service) => service.stop(),
+        ).pipe(
+            observeOn(this.scheduler),
+            // we want to store the last emission, to ensure its new subscriber get notified with it
+            // this way, late subscribers don't get out of sync
+            shareReplay<[State<Context, Event>, Event]>(1),
+            map(value => cloneDeep(value)),
+        );
+
+        // we poll the service to get a complete observable once initialized
+        const serviceInitialized$ = interval(1, this.scheduler).pipe(
+            filter(() => this.service.initialized),
+            first(),
+        );
+
+        this.event$ = new Subject<Event | Event['type']>();
+
+        // we don't link the event observable to the scheduler as it is just a queue to handle service initialization. Btw, the transition will be
+        // performed within the scheduler
+        this.event$.pipe(delayWhen(() => serviceInitialized$)).subscribe(event => {
+            this.service.send(event);
+        });
     }
 }

@@ -12,7 +12,8 @@
         "build-esnext": "tsc --declaration --outDir es --project tsconfig.build.json",
         "build-es5": "tsc --declaration --outDir lib --module commonjs --target es5",
         "build-all": "yarn build-esnext && yarn build-es5",
-        "build": "yarn clean-all && yarn build-all"
+        "build": "yarn clean-all && yarn build-all",
+        "test": "jest"
     },
     "files": [
         "es/**/*",

@@ -28,6 +28,10 @@ export class Fortress<
         return this.service.scheduler;
     }
 
+    get strategy() {
+        return this.service.strategy;
+    }
+
     public createFirewall(query: Record<string, any> = null) {
         return new Firewall<FortressContext, FirewallContext>(this.guard, query, this);
     }
