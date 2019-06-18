@@ -1,17 +1,16 @@
-import { Strategy } from '@castli/core';
+import { Facade, Strategy } from '@castli/core';
 
 export class TestStrategy extends Strategy {
     private shouldResolve: boolean;
 
     constructor(shouldResolve = true) {
-        super(
-            () =>
-                ({
-                    pipe: jest.fn(),
-                    subscribe: jest.fn(),
-                    waitFor$: jest.fn(),
-                } as any),
-        );
+        const fakeService = {
+            pipe: jest.fn(),
+            subscribe: jest.fn(),
+            waitFor$: jest.fn(),
+        } as any;
+
+        super(() => fakeService, () => new Facade(fakeService));
         this.shouldResolve = shouldResolve;
     }
 

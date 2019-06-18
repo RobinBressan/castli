@@ -4,7 +4,7 @@ import { SchedulerLike } from 'rxjs';
 import { BasicAuthEvent, BasicAuthStateSchema, createMachine } from './machine';
 import { Proxy } from './types';
 
-export class BasicAuthService<Query> extends ObservableService<
+export class BasicAuthService<Query extends Record<string, any>> extends ObservableService<
     {},
     BasicAuthEvent,
     BasicAuthStateSchema

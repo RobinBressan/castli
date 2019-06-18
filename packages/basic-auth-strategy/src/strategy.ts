@@ -2,6 +2,7 @@ import { Strategy } from '@castli/core';
 import { race, SchedulerLike } from 'rxjs';
 import { observeOn } from 'rxjs/operators';
 
+import { BasicAuth } from './facade';
 import { BasicAuthService } from './service';
 import { Proxy } from './types';
 
@@ -10,7 +11,10 @@ export class BasicAuthStrategy<
     Response extends Record<string, any> = Record<string, any>
 > extends Strategy<Query, Response> {
     constructor(proxy: Proxy<Query, Response>) {
-        super((scheduler: SchedulerLike) => new BasicAuthService<Query>(proxy, scheduler));
+        super(
+            (scheduler: SchedulerLike) => new BasicAuthService<Query>(proxy, scheduler),
+            (service: BasicAuthService<Query>) => new BasicAuth<Query>(service),
+        );
     }
 
     public async begin(query?: Query) {

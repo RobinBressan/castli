@@ -20,5 +20,5 @@ export function useStrategy() {
         };
     }, [fortress]);
 
-    return { context, stateValue };
+    return { context, stateValue, strategy: fortress.strategy };
 }

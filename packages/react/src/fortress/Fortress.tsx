@@ -1,17 +1,22 @@
-import { Fortress as FortressClass, FortressStateValue, Guard, Strategy } from '@castli/core';
+import { Fortress as FortressFacade, FortressStateValue, Guard, Strategy } from '@castli/core';
 import * as React from 'react';
 import { animationFrameScheduler, SchedulerLike } from 'rxjs';
 
 import { context } from './context';
 
-type Renderer = (fortress: FortressClass) => React.ReactNode;
+interface RenderResult {
+    context: Record<string, any>;
+    fortress: FortressFacade;
+}
+
+type Renderer = (result: RenderResult) => React.ReactNode;
 
 export interface FortressProps {
     children: Renderer | React.ReactNode;
     guard: Guard;
     scheduler?: SchedulerLike;
     strategy: Strategy;
-    onReady?(fortress: FortressClass): void;
+    onReady?(fortress: FortressFacade): void;
 }
 
 export const Fortress: React.SFC<FortressProps> = ({
@@ -21,7 +26,7 @@ export const Fortress: React.SFC<FortressProps> = ({
     scheduler = animationFrameScheduler,
     strategy,
 }) => {
-    const fortress = React.useMemo(() => new FortressClass(strategy, guard, scheduler), [
+    const fortress = React.useMemo(() => new FortressFacade(strategy, guard, scheduler), [
         guard,
         strategy,
     ]);
@@ -49,7 +54,9 @@ export const Fortress: React.SFC<FortressProps> = ({
 
     return (
         <context.Provider value={value}>
-            {typeof children === 'function' ? (children as Renderer)(fortress) : children}
+            {typeof children === 'function'
+                ? (children as Renderer)({ context: fortressContext, fortress })
+                : children}
         </context.Provider>
     );
 };

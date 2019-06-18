@@ -1,8 +1,14 @@
+import { Facade, ObservableService } from '@castli/core';
 import * as React from 'react';
 
 import { useStrategy } from './useStrategy';
 
-type Renderer = (context: Record<string, any>) => React.ReactNode;
+interface RenderResult {
+    context: Record<string, any>;
+    strategy: Facade<ObservableService>;
+}
+
+type Renderer = (result: RenderResult) => React.ReactNode;
 
 export interface StrategyProps {
     stateValue: string;
@@ -10,9 +16,13 @@ export interface StrategyProps {
 }
 
 export const Strategy: React.SFC<StrategyProps> = ({ children, stateValue }) => {
-    const { context, stateValue: currentStateValue } = useStrategy();
+    const { context, stateValue: currentStateValue, strategy } = useStrategy();
 
     return stateValue === currentStateValue ? (
-        <>{typeof children === 'function' ? (children as Renderer)(context) : children}</>
+        <>
+            {typeof children === 'function'
+                ? (children as Renderer)({ context, strategy })
+                : children}
+        </>
     ) : null;
 };

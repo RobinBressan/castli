@@ -11,9 +11,14 @@ export abstract class Strategy<
 
     protected service: ObservableService;
     private fortressService: FortressService<Response>;
+    private facadeFactory: (serice: ObservableService) => Facade<ObservableService>;
     private serviceFactory: (scheduler: SchedulerLike) => ObservableService;
 
-    constructor(serviceFactory: (scheduler: SchedulerLike) => ObservableService) {
+    constructor(
+        serviceFactory: (scheduler: SchedulerLike) => ObservableService,
+        facadeFactory: (serice: ObservableService) => Facade<ObservableService>,
+    ) {
+        this.facadeFactory = facadeFactory;
         this.serviceFactory = serviceFactory;
     }
 
@@ -25,7 +30,7 @@ export abstract class Strategy<
     public boot(fortressService: FortressService<Response>) {
         this.fortressService = fortressService;
         this.service = this.serviceFactory(this.fortressService.scheduler);
-        this.facade = new Facade(this.service);
+        this.facade = this.facadeFactory(this.service);
 
         return this;
     }
