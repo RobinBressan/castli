@@ -1,7 +1,8 @@
 import { Fortress } from '@castli/core';
-import { createFortressEventSubscriber, createTestProxy } from '@castli/test-utils';
+import { createFortressEventSubscriber } from '@castli/test-utils';
 
 import { BasicAuthStrategy } from '../../';
+import { createTestProxy } from './createTestProxy';
 
 interface BasicAuthQuery {
     email: string;

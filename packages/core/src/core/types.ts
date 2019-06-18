@@ -6,7 +6,3 @@ export interface Event<T extends string> {
 }
 
 export type OptionalPromise<T> = T | Promise<T>;
-
-export interface Proxy<Query = any, Response = any> {
-    request(query: Query): OptionalPromise<Response>;
-}

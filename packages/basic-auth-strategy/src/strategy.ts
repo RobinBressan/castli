@@ -1,7 +1,9 @@
-import { Proxy, Strategy } from '@castli/core';
+import { Strategy } from '@castli/core';
 import { race, SchedulerLike } from 'rxjs';
 import { observeOn } from 'rxjs/operators';
+
 import { BasicAuthService } from './service';
+import { Proxy } from './types';
 
 export class BasicAuthStrategy<
     Query extends Record<string, any> = Record<string, any>,
