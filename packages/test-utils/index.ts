@@ -1,3 +1,3 @@
 export * from './src/helpers';
-export * from './src/TestStrategy';
+export * from './src/test-strategy/strategy';
 export * from './src/subscribers';

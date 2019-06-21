@@ -4,25 +4,19 @@ import * as rtl from '@testing-library/react';
 import * as React from 'react';
 
 import { queueScheduler } from 'rxjs';
-import { Firewall, FirewallState, Fortress, FortressProps } from '../../';
+import { Firewall, Fortress, FortressProps } from '../../';
 
-function render(
-    guard: FortressProps['guard'],
-    onReady: FortressProps['onReady'],
-    strategyShouldResolve?: boolean,
-) {
+function render(guard: FortressProps['guard'], onReady: FortressProps['onReady']) {
     const format = (stateValue: FirewallStateValue) => `I am ${stateValue}`;
-    const strategy = new TestStrategy(strategyShouldResolve);
+    const strategy = new TestStrategy();
     const wrapper = rtl.render(
         <Fortress strategy={strategy} guard={guard} onReady={onReady} scheduler={queueScheduler}>
             <Firewall query={{ role: 'ADMIN' }}>
-                <FirewallState.Idle>{format('idle')}</FirewallState.Idle>
-                <FirewallState.Unauthenticated>
-                    {format('unauthenticated')}
-                </FirewallState.Unauthenticated>
-                <FirewallState.Authorizing>{format('authorizing')}</FirewallState.Authorizing>
-                <FirewallState.Granted>{format('granted')}</FirewallState.Granted>
-                <FirewallState.Denied>{format('denied')}</FirewallState.Denied>
+                <Firewall.Idle>{format('idle')}</Firewall.Idle>
+                <Firewall.Unauthenticated>{format('unauthenticated')}</Firewall.Unauthenticated>
+                <Firewall.Authorizing>{format('authorizing')}</Firewall.Authorizing>
+                <Firewall.Granted>{format('granted')}</Firewall.Granted>
+                <Firewall.Denied>{format('denied')}</Firewall.Denied>
             </Firewall>
         </Fortress>,
     );
@@ -99,6 +93,10 @@ describe('<Firewall />', () => {
 
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
+            (fortress.strategy as TestStrategy).commit({
+                email: 'bob2@localhost',
+                password: 'password',
+            });
         });
 
         await rtl.wait(() => getByStateValue('granted'));
@@ -111,7 +109,7 @@ describe('<Firewall />', () => {
         expect(guard).toHaveBeenCalledTimes(1);
         expect(guard).toHaveBeenCalledWith(
             { role: 'ADMIN' },
-            { email: 'bob@localhost', password: 'password' }, // this is the behavior of the test strategy
+            { email: 'bob2@localhost', password: 'password' }, // this is the behavior of the test strategy
         );
     });
 
@@ -137,6 +135,10 @@ describe('<Firewall />', () => {
 
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
+            (fortress.strategy as TestStrategy).commit({
+                email: 'bob2@localhost',
+                password: 'password',
+            });
         });
 
         await rtl.wait(() => getByStateValue('denied'));
@@ -149,7 +151,7 @@ describe('<Firewall />', () => {
         expect(guard).toHaveBeenCalledTimes(1);
         expect(guard).toHaveBeenCalledWith(
             { role: 'ADMIN' },
-            { email: 'bob@localhost', password: 'password' }, // this is the behavior of the test strategy
+            { email: 'bob2@localhost', password: 'password' }, // this is the behavior of the test strategy
         );
     });
 });

@@ -4,24 +4,24 @@ import * as rtl from '@testing-library/react';
 import * as React from 'react';
 import { queueScheduler } from 'rxjs';
 
-import { Fortress, FortressProps, FortressState } from '../..';
+import { Fortress, FortressProps, Strategy } from '../..';
 
-function render(
-    guard: FortressProps['guard'],
-    onReady: FortressProps['onReady'],
-    strategyShouldResolve?: boolean,
-) {
+function render(guard: FortressProps['guard'], onReady: FortressProps['onReady']) {
     const format = (stateValue: FortressStateValue) => `I am ${stateValue}`;
-    const strategy = new TestStrategy(strategyShouldResolve);
+    const strategy = new TestStrategy();
 
     const wrapper = rtl.render(
         <Fortress strategy={strategy} guard={guard} onReady={onReady} scheduler={queueScheduler}>
-            <FortressState.Idle>{format('idle')}</FortressState.Idle>
-            <FortressState.Unauthenticated>
-                {format('unauthenticated')}
-            </FortressState.Unauthenticated>
-            <FortressState.Challenging>{format('challenging')}</FortressState.Challenging>
-            <FortressState.Authenticated>{format('authenticated')}</FortressState.Authenticated>
+            <div>
+                <Fortress.Idle>{format('idle')}</Fortress.Idle>
+                <Fortress.Unauthenticated>{format('unauthenticated')}</Fortress.Unauthenticated>
+                <Fortress.Challenging>{format('challenging')}</Fortress.Challenging>
+                <Fortress.Authenticated>{format('authenticated')}</Fortress.Authenticated>
+            </div>
+            <div>
+                <Strategy stateValue="committed">I am committed</Strategy>
+                <Strategy stateValue="rollbacked">I am rollbacked</Strategy>
+            </div>
         </Fortress>,
     );
 
@@ -75,6 +75,7 @@ describe('<Fortress />', () => {
         const fortress = onReady.mock.calls[0][0] as FortressClass;
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
+            (fortress.strategy as TestStrategy).commit();
         });
 
         await rtl.wait(() => getByStateValue('authenticated'));
@@ -102,13 +103,14 @@ describe('<Fortress />', () => {
         const guard = jest.fn().mockReturnValue(true);
         const onReady = jest.fn();
 
-        const { getByStateValue } = render(guard, onReady, false);
+        const { getByStateValue } = render(guard, onReady);
 
         expect(onReady).toHaveBeenCalledTimes(1);
 
         const fortress = onReady.mock.calls[0][0] as FortressClass;
         rtl.act(() => {
             fortress.challenge({ email: 'bob@localhost', password: 'password' });
+            (fortress.strategy as TestStrategy).rollback();
         });
 
         await rtl.wait(() => getByStateValue('unauthenticated'));
@@ -117,5 +119,51 @@ describe('<Fortress />', () => {
         expect(() => getByStateValue('idle')).toThrowError();
         expect(() => getByStateValue('challenging')).toThrowError();
         expect(() => getByStateValue('authenticated')).toThrowError();
+    });
+
+    describe('<Strategy />', () => {
+        it('should correctly render when test strategy is committed', async () => {
+            expect.assertions(3);
+
+            const guard = jest.fn().mockReturnValue(true);
+            const onReady = jest.fn();
+
+            const { getByText } = render(guard, onReady);
+
+            expect(onReady).toHaveBeenCalledTimes(1);
+
+            const fortress = onReady.mock.calls[0][0] as FortressClass;
+            rtl.act(() => {
+                fortress.challenge({ email: 'bob@localhost', password: 'password' });
+                (fortress.strategy as TestStrategy).commit();
+            });
+
+            await rtl.wait(() => getByText('I am committed'));
+
+            expect(getByText('I am committed')).toBeInTheDocument();
+            expect(() => getByText('I am rollbacked')).toThrowError();
+        });
+
+        it('should correctly render when test strategy is rollbacked', async () => {
+            expect.assertions(3);
+
+            const guard = jest.fn().mockReturnValue(true);
+            const onReady = jest.fn();
+
+            const { getByText } = render(guard, onReady);
+
+            expect(onReady).toHaveBeenCalledTimes(1);
+
+            const fortress = onReady.mock.calls[0][0] as FortressClass;
+            rtl.act(() => {
+                fortress.challenge({ email: 'bob@localhost', password: 'password' });
+                (fortress.strategy as TestStrategy).rollback();
+            });
+
+            await rtl.wait(() => getByText('I am rollbacked'));
+
+            expect(getByText('I am rollbacked')).toBeInTheDocument();
+            expect(() => getByText('I am committed')).toThrowError();
+        });
     });
 });

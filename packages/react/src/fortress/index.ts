@@ -1,5 +1,7 @@
-export * from './Fortress';
+export { FortressProps } from './Fortress';
 export * from './useFortress';
+export * from './Strategy';
 
-import * as _FortressState from './StateValues';
-export const FortressState = _FortressState;
+import { Fortress as _Fortress } from './Fortress';
+import * as StateValues from './StateValues';
+export const Fortress = Object.assign(_Fortress, StateValues);

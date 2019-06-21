@@ -1,5 +1,6 @@
-export * from './Firewall';
+export { FirewallProps } from './Firewall';
 export * from './useFirewall';
 
-import * as _FirewallState from './StateValues';
-export const FirewallState = _FirewallState;
+import { Firewall as _Firewall } from './Firewall';
+import * as StateValues from './StateValues';
+export const Firewall = Object.assign(_Firewall, StateValues);
