@@ -1,29 +1,32 @@
 import { Event } from '@castli/core';
 import { ActionFunction, ActionObject, Machine, State as BaseState } from 'xstate';
 
-export type BasicAuthEvent =
+export type SimpleAuthEvent =
     | Event<'AUTHENTICATE'>
     | Event<'CHALLENGE'>
     | Event<'DEAUTHENTICATE'>
     | Event<'RECHALLENGE'>;
 
-export type BasicAuthStateValue = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
+export type SimpleAuthStateValue = 'authenticated' | 'challenging' | 'idle' | 'unauthenticated';
 
-export interface BasicAuthStateSchema {
-    states: Record<BasicAuthStateValue, {}>;
+export interface SimpleAuthStateSchema {
+    states: Record<SimpleAuthStateValue, {}>;
 }
 
-export type State = BaseState<{}, BasicAuthEvent>;
+export type State = BaseState<{}, SimpleAuthEvent>;
 
 interface Actions
-    extends Record<string, ActionObject<{}, BasicAuthEvent> | ActionFunction<{}, BasicAuthEvent>> {
-    beginChallenge(context: {}, event: BasicAuthEvent);
+    extends Record<
+        string,
+        ActionObject<{}, SimpleAuthEvent> | ActionFunction<{}, SimpleAuthEvent>
+    > {
+    beginChallenge(context: {}, event: SimpleAuthEvent);
 }
 
 export function createMachine(actions: Actions) {
-    return Machine<{}, BasicAuthStateSchema, BasicAuthEvent>(
+    return Machine<{}, SimpleAuthStateSchema, SimpleAuthEvent>(
         {
-            id: 'basic-auth',
+            id: 'simple-auth',
             initial: 'idle',
             states: {
                 authenticated: {},

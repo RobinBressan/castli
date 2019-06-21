@@ -1,1 +1,1 @@
-export * from './BasicAuthFortress';
+export * from './SimpleAuthFortress';

@@ -1,14 +1,14 @@
 import { Fortress } from '@castli/core';
 import { createFortressEventSubscriber } from '@castli/test-utils';
 
-import { BasicAuthStrategy } from '../../';
+import { SimpleAuthStrategy } from '../../';
 import { createTestProxy } from './createTestProxy';
 
-interface BasicAuthQuery {
+interface SimpleAuthQuery {
     email: string;
     password: string;
 }
-interface BasicAuthResponse {
+interface SimpleAuthResponse {
     token: string;
 }
 
@@ -20,7 +20,7 @@ describe('Fortress', () => {
             token: 'abc123',
         });
 
-        const strategy = new BasicAuthStrategy<BasicAuthQuery, BasicAuthResponse>(proxy);
+        const strategy = new SimpleAuthStrategy<SimpleAuthQuery, SimpleAuthResponse>(proxy);
         const fortress = new Fortress(strategy, () => ({ name: 'Bob' }));
         const subscriber = jest.fn();
         fortress.subscribe(subscriber);
@@ -51,7 +51,7 @@ describe('Fortress', () => {
             token: 'abc123',
         });
 
-        const strategy = new BasicAuthStrategy<BasicAuthQuery, BasicAuthResponse>(proxy);
+        const strategy = new SimpleAuthStrategy<SimpleAuthQuery, SimpleAuthResponse>(proxy);
         const fortress = new Fortress(strategy, () => ({ name: 'Bob' }));
         const subscriber = jest.fn();
         fortress.subscribe(subscriber);
@@ -92,7 +92,7 @@ describe('Fortress', () => {
 
         const proxy = createTestProxy(new Error('Invalid credentials'));
 
-        const strategy = new BasicAuthStrategy<BasicAuthQuery, BasicAuthResponse>(proxy);
+        const strategy = new SimpleAuthStrategy<SimpleAuthQuery, SimpleAuthResponse>(proxy);
         const fortress = new Fortress(strategy, () => ({ name: 'Bob' }));
         const subscriber = jest.fn();
         fortress.subscribe(subscriber);

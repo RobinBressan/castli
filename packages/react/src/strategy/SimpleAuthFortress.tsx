@@ -1,16 +1,16 @@
-import { BasicAuthStrategy, Proxy } from '@castli/basic-auth-strategy';
+import { Proxy, SimpleAuthStrategy } from '@castli/simple-auth-strategy';
 import * as React from 'react';
 import { animationFrameScheduler } from 'rxjs';
 
 import { Fortress, FortressProps } from '../fortress/Fortress';
 import { Omit } from '../types';
 
-export interface BasicAuthFortressProps extends Omit<FortressProps, 'strategy'> {
+export interface SimpleAuthFortressProps extends Omit<FortressProps, 'strategy'> {
     children: React.ReactNode;
     proxy: Proxy;
 }
 
-export const BasicAuthFortress: React.SFC<BasicAuthFortressProps> = ({
+export const SimpleAuthFortress: React.SFC<SimpleAuthFortressProps> = ({
     proxy,
     scheduler = animationFrameScheduler,
     ...otherProps
@@ -19,7 +19,7 @@ export const BasicAuthFortress: React.SFC<BasicAuthFortressProps> = ({
         <Fortress
             {...otherProps}
             scheduler={scheduler}
-            strategy={new BasicAuthStrategy(proxy, scheduler)}
+            strategy={new SimpleAuthStrategy(proxy, scheduler)}
         />
     );
 };

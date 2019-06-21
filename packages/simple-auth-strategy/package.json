@@ -1,5 +1,5 @@
 {
-    "name": "@castli/basic-auth-strategy",
+    "name": "@castli/simple-auth-strategy",
     "version": "1.0.0",
     "main": "lib/index.js",
     "module": "es/index.js",

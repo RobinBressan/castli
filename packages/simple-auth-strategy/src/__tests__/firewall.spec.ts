@@ -1,14 +1,14 @@
 import { Fortress } from '@castli/core';
 import { createFirewallEventSubscriber } from '@castli/test-utils';
 
-import { BasicAuthStrategy } from '../../';
+import { SimpleAuthStrategy } from '../../';
 import { createTestProxy } from './createTestProxy';
 
-interface BasicAuthQuery {
+interface SimpleAuthQuery {
     email: string;
     password: string;
 }
-interface BasicAuthResponse {
+interface SimpleAuthResponse {
     token: string;
 }
 
@@ -21,7 +21,7 @@ describe('Firewall', () => {
         });
 
         const guard = jest.fn().mockReturnValue({ name: 'Bob' });
-        const strategy = new BasicAuthStrategy<BasicAuthQuery, BasicAuthResponse>(proxy);
+        const strategy = new SimpleAuthStrategy<SimpleAuthQuery, SimpleAuthResponse>(proxy);
         const fortress = new Fortress(strategy, guard);
         const firewall = fortress.createFirewall({ role: 'ADMIN' });
         expect(fortress.state.value).toBe('idle');
@@ -64,7 +64,7 @@ describe('Firewall', () => {
 
         const guard = jest.fn().mockReturnValue({ name: 'Bob' });
 
-        const strategy = new BasicAuthStrategy(proxy);
+        const strategy = new SimpleAuthStrategy(proxy);
         const fortress = new Fortress(strategy, guard);
         const firewall = fortress.createFirewall({ role: 'ADMIN' });
 
@@ -129,7 +129,7 @@ describe('Firewall', () => {
 
         const guard = jest.fn().mockImplementation(() => Promise.reject(new Error('Denied')));
 
-        const strategy = new BasicAuthStrategy(proxy);
+        const strategy = new SimpleAuthStrategy(proxy);
         const fortress = new Fortress(strategy, guard);
         const firewall = fortress.createFirewall({ role: 'ADMIN' });
 
