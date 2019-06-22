@@ -1,3 +1,3 @@
 export * from './src/firewall';
 export * from './src/fortress';
-export * from './src/types';
+export * from './src/strategy';

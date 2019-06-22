@@ -1,0 +1,62 @@
+{
+    "name": "@castli/react-simple-auth-strategy",
+    "version": "1.0.0",
+    "description": "React connector for castli simple auth strategy",
+    "author": "RobinBressan",
+    "main": "lib/index.js",
+    "module": "es/index.js",
+    "license": "MIT",
+    "scripts": {
+        "clean-esnext": "rm -rf es",
+        "clean-es5": "rm -rf lib",
+        "clean-all": "yarn clean-esnext && yarn clean-es5",
+        "build-esnext": "tsc --declaration --outDir es --project tsconfig.build.json",
+        "build-es5": "tsc --declaration --outDir lib --module commonjs --target es5",
+        "build-all": "yarn build-esnext && yarn build-es5",
+        "build": "yarn clean-all && yarn build-all",
+        "test": "jest"
+    },
+    "files": [
+        "es/**/*",
+        "lib/**/*"
+    ],
+    "devDependencies": {
+        "@castli/test-utils": "^1.0.0",
+        "@testing-library/react": "8.0.1",
+        "@types/react": "16.8.19",
+        "jest-dom": "3.5.0",
+        "react": "16.9.0-alpha.0",
+        "react-dom": "16.9.0-alpha.0"
+    },
+    "dependencies": {
+        "@castli/react": "^1.0.0",
+        "@castli/simple-auth-strategy": "^1.0.0"
+    },
+    "jest": {
+        "globals": {
+            "ts-jest": {
+                "diagnostics": {
+                    "ignoreCodes": [
+                        151001
+                    ]
+                }
+            }
+        },
+        "transformIgnorePatterns": [
+            "<rootDir>/node_modules/(?!@castli)"
+        ],
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js"
+        ],
+        "setupFilesAfterEnv": [
+            "<rootDir>/src/__tests__/setupTestFramework.ts"
+        ],
+        "transform": {
+            "\\.(ts|tsx)$": "ts-jest"
+        },
+        "testEnvironment": "jsdom",
+        "testRegex": "/__tests__/.*\\.spec\\.(ts|tsx|js)$"
+    }
+}
